@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
-void yyerror(const char *, int, const char *);
+void yyerror(const char *);
 %}
 
 /*enable improved syntax error checking*/
@@ -178,3 +178,7 @@ string_constant	: STRING
 constant	: INTCON
 		| FLOATCON
 		; 
+
+%%
+
+void yyerror(const char *s) {fprintf(stderr, "%s\n",s);}
