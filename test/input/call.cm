@@ -1,0 +1,13 @@
+int decls() {
+  return 7;
+}
+
+float foo() {
+  return 7.3;
+}
+
+int main() {
+  write(decls());
+  write(foo());
+	exit;
+}

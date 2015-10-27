@@ -1,0 +1,17 @@
+int main () {
+ int i,j,k,l,m,s0;
+
+	i=1; j=2; k=3; l=4;
+
+	m = i + 7;
+	write(m);
+	s0 = l - 5;
+	write(s0);
+	write(j*k*l);
+	write(j*k-l);
+	write(i+j+k*l);
+	write((k*l)/j-i);
+	write((i+j)*(k + (i*m))/s0);
+	exit; 
+
+}

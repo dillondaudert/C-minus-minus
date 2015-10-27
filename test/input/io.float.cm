@@ -1,0 +1,8 @@
+int main() {
+  float b;
+
+	read(b); write(b);
+	write(1.1);
+	write(1.1E5);
+	exit;
+}

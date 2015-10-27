@@ -1,0 +1,10 @@
+int main () {
+ float i,j,k,l;
+
+	write(10.0+20.0);
+	i=1.2;  k=3.3; l=4.1;
+	j = i + k + l;
+	write(j);
+	exit; 
+
+}

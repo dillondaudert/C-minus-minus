@@ -1,0 +1,55 @@
+int main() {
+	
+  int source[30],target[30];
+  int cost[900];
+  int   n,m,i,j;
+              
+              m = 30;
+              n = 30;
+              
+              i = 0;
+	      
+              while (i < m) {
+                cost[i*m] = i;
+                target[i] = i+1;
+                i = i + 1;
+	      	  }
+              
+              j = 0;
+	      while (j < n) {
+                cost[j] = j;
+                target[j] = 2 * (j+1);
+                j = j + 1;
+	      }
+              
+          i = 1;
+	      while (i < m) {	
+
+            j = 1;
+			while (j < n) {		
+              
+                cost[i*m+j] = cost[(i - 1)*m+j - 1];
+		  		if (target[i] != source[j]) {
+		    		cost[i*m+j] = cost[i*m+j] + 1;
+		    	}
+
+              	if (cost[(i - 1)*m+j] < cost[i*m+j]) {
+		    		cost[i*m+j] = cost[(i-1)*m+j] + 1;
+		    	}
+
+                if (cost[i*m+j - 1] < cost[i*m+j]) {
+                    cost[i*m+j] = cost[i*m+j - 1] + 1;
+                }
+              
+                j = j + 1;
+	        }
+              
+            i = i + 1;
+
+	      }
+              
+          write(m);
+          write(n);
+          write(cost[899]);
+	exit;
+}            

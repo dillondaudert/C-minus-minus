@@ -1,0 +1,12 @@
+int main() {
+ float a,b;
+
+	a=1.5;
+	while (a) {
+		write(a);
+		a=a-0.1;
+	}
+	write(a);
+
+	exit;
+}

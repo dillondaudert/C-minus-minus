@@ -1,0 +1,26 @@
+
+int x, y;
+
+int gcd() {
+      int t;
+         if (y==0) {
+            return x;
+	 }
+         else {
+	      t = x;
+	      x = y;
+	      y = t - y * (t / y);
+	      return gcd();
+	 }
+}
+
+int main() {
+         read (x);
+         read (y);
+         while ((x != 0) || (y != 0)) {
+	       write (gcd());
+               read (x);
+               read (y);
+         }
+	exit;
+}

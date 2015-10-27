@@ -1,0 +1,20 @@
+int main () {
+ int i,j,k,l,m;
+
+	i=1; j=2; k=3; l=4;
+
+	m=i<j;
+	write(m);
+	write(i == j);
+	write(i == i);
+	write(l>k);
+	write(j>=j);
+	write(k<=i);
+	write(i!=j);
+	write(!(l>k));
+	write((i > j) || (l > k));
+	write((j > i) && (k > l));
+    write((i == j) || ((i<j)&&(k!=l)));
+
+	exit;
+}

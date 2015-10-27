@@ -1,0 +1,39 @@
+int i,j,k,l;
+
+
+int a1() {
+	write(1);
+	return 0;
+}
+
+int a2() {
+	j = a1(); 
+	write(2);
+	return 0;
+}
+
+int a3() {
+	i = a1();
+	j = a2();
+	write(3);
+	return 0;
+}
+
+int a4() {
+	i = a1();
+	j = a2();
+	k = a3();
+	write(4);
+	return 0;
+}
+
+
+int main() {
+
+
+	i = a1(); j = a2(); k = a3(); l = a4() ;
+
+
+
+	exit;
+}

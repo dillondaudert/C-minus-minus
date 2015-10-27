@@ -1,0 +1,11 @@
+int main () {
+ int i,j,k,l;
+
+	i=1; j=0; k=0; l=1;
+
+	write(i && j);
+	write(i && i);
+	write(k && l);
+	write(k && j);
+	exit;
+}

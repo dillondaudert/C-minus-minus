@@ -1,0 +1,29 @@
+int a;
+int b;
+
+int decls() {
+  write(a);
+  if (a > 0) {
+    a = a - 1;
+    return decls();
+  }
+  else {
+    a = 0;
+    return a;
+  }
+}
+
+float foo() {
+  write(a);
+  write(b);
+
+  return 7.3;
+}
+
+int main() {
+  read(a);
+  write(decls());
+  b = 10;
+  write(foo());
+	exit;
+}

@@ -1,0 +1,54 @@
+
+int a,b,c,d;
+
+int b4() {
+	write(4);
+	write(a+1);
+	return a+1;
+}
+
+float d2() {
+  int tmp;
+	write(b);
+        write(a);
+	tmp=a;
+	a=b;
+	b=tmp;
+
+	return 1.0;
+}
+
+int d3() {
+	a=a+1;
+	b=b+2;
+	c=c+3;
+	d=d;
+
+	return c;
+}
+
+int d1() {
+int b;
+
+	b=a*200;
+	write(a); write(b); write(c); write(d);
+	write(d2());
+	write(a); write(b); write(c); write(d);
+	write(d3());
+	write(a); write(b); write(c); write(d);
+
+	return b;
+}
+
+int main() {
+	a=1; b=2; c=3; d=4;
+
+
+	a = 2;
+	write(b4());
+	write(d1());
+	a = 1;
+	write(b4());
+	exit;
+}
+

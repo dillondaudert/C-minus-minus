@@ -1,0 +1,13 @@
+int main() {
+ int a;
+
+    write('enter a:');
+    read(a);
+    if (a < 0) { 
+	write(1);
+    }
+    else {
+	write(0);
+    }
+	exit;
+}

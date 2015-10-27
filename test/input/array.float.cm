@@ -1,0 +1,14 @@
+int main () {
+ float a[10];
+ int i;
+
+	a[3] = 4.0;
+	write(a[3]);
+	i = 3.0;
+	a[i] = 7.0;
+	write(a[i]);
+	i = i + 2;
+	a[i] = 22.0;
+	write(a[5]);
+	exit;
+}

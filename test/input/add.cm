@@ -1,0 +1,10 @@
+int main () {
+ int i,j,k,l;
+
+	write(10+20);
+	i=1;  k=3; l=4;
+	j = i + k + l;
+	write(j);
+	exit; 
+
+}

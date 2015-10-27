@@ -1,0 +1,12 @@
+int main () {
+ int i,j;
+
+	i=0-1; j=0;
+
+	write(i);
+	write(!j);
+	write(j);
+	write(!i);
+
+	exit;
+}

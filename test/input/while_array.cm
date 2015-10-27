@@ -1,0 +1,23 @@
+int main() {
+ int a;
+ int c[10];
+
+	a=0;
+    while (a < 10) {
+      c[a] = a;
+	  a = a + 1;
+	}
+
+	a = 0;
+    while (a < 10) {
+      if (a < 5) {
+        write(c[a]);
+      }
+      else {
+        write(0);
+      }
+	  a = a + 1;
+	}
+
+	exit;
+}

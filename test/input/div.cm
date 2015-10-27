@@ -1,0 +1,11 @@
+int main () {
+ int i,j,k,l;
+
+	write(51/17);
+	i=100;  k=2; l=5;
+	j = i / k / l ;
+	write(j);
+	exit;
+
+
+}

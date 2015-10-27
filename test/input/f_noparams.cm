@@ -1,0 +1,24 @@
+int b1() {
+	write(1);
+	return 1;
+}
+
+int b2() {
+	write(2);
+	return b1();
+}
+
+int b3() {
+	write(3);
+	return b1()+b2();
+}
+
+int b4() {
+	write(4);
+	return b1()+b2()+b3();
+}
+
+int main() {
+	write(b1()+b2()+b3()+b4());
+	exit;
+}

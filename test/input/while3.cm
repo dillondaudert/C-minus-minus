@@ -1,0 +1,20 @@
+int main () {
+
+  int a, b, c;
+  
+  a = 0;
+  while (a < 50) {
+  	b = 0;
+  	while (b < 10) {
+  	  write (a+b);
+  	  b = b + 2;
+  	}
+  	c = 0 - 10;
+  	while (c != b) {
+  	  write(c);
+  	  c = c + 1;
+  	}
+  	a = a + 10;
+  }
+	exit;
+}

@@ -1,0 +1,24 @@
+int main() {
+ float a,b,c,d,i,j,k,l;
+ int m;
+
+	a=1.1; b=2.2; c=3.3; d=4.4;
+	write(a+b+c+d);
+
+    i = 1.76; j = 2.97; k = 3.0; l = 4.22;
+	write((i+j+k*l) + (a+b/c-d));
+
+	m=a+b;
+	write(m);
+	
+	l = m + c;
+	write(l);
+	
+	a = 5;
+	write(a);
+	
+	write(b < c);
+	write(d > 10.0);
+	write(a != 3.3);
+	exit;
+}
