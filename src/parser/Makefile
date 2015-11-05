@@ -1,7 +1,7 @@
 #Parser Makefile
 
 CC = gcc
-CFLAGS = -Wall --std=c99 -O3 -flto
+CFLAGS = -Wall --std=gnu99 -O3 -flto
 
 all: parser
 

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 void yyerror(const char *);
+int yylex(void);
 %}
 
 /*enable improved syntax error checking*/
@@ -25,6 +26,8 @@ void yyerror(const char *);
 %token IDENTIFIER
 
 /*operator precedence*/
+%left "&&" "||"
+%right '!'
 %left '>' '<' "<=" ">=" "!=" "=="
 %left '+' '-'
 %left '*' '/'

@@ -2,11 +2,16 @@ D	[0-9]
 NZ	[1-9]
 L	[a-zA-Z_]
 A	[a-zA-Z_0-9]
+E	([Ee][+-]?{D}+)
 
 %{
 #include "grammar.tab.h"
 #include <string.h>
 %}
+
+/* Options to suppress unused functions */
+%option nounput
+%option noinput
 
 %x COMMENT
 %x STRSTATE
@@ -60,11 +65,16 @@ A	[a-zA-Z_0-9]
 
 {L}{A}*			{return IDENTIFIER;}
 "0"|{NZ}{D}*		{return INTCON;}
+{D}*"."{D}+{E}?		{return FLOATCON;}
 
+\'			{BEGIN(STRSTATE);}
 \"			{BEGIN(STRSTATE);}
 <STRSTATE>\"		{BEGIN 0; return STRING;}
+<STRSTATE>\'		{BEGIN 0; return STRING;}
+<STRSTATE>.		{ECHO;}
 
-.			{ECHO;}
+[ \t]			;
+.			{ECHO; yyerror("Unexpected character");}
 
 
 %%
