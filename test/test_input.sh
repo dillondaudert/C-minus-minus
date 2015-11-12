@@ -9,7 +9,7 @@
 
 echo "Testing syntax"
 
-for filename in /home/dillon/C-minus-minus/test/input/*.cm; do
+for filename in ./input/*.cm; do
 	echo ${filename}
 	./cmm $filename
 done
