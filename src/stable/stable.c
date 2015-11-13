@@ -5,7 +5,7 @@
 #include "cmm.h"
 
 int st_size = 512;
-stable* st_table;
+stable* st_table = NULL;
 
 /*
  * st_hash return the hash key for the given string
@@ -20,6 +20,7 @@ unsigned long int st_hash(const char *str)
 
 /*
  * The hash function computes the key of the symbol recursively
+ * The hash function was provided by Dan Berstein.
  */
 unsigned long int st_hash_helper(int i, const char *str)
 {
@@ -69,7 +70,7 @@ symb* st_add_symbol(char *name, char *addr, int offset, int type, int size)
                 if(DEBUG) printf("st_add, %s already located at %d:%s\n", name, 
                                                                           key,
                                                              curr->value->name);
-                return curr->value;
+                return NULL;
             }
             //If symbol not yet found and collision LL is exhausted
         }
@@ -95,7 +96,7 @@ symb* st_add_symbol(char *name, char *addr, int offset, int type, int size)
  * If the symbol is found, a pointer to it is returned
  * else, NULL is returned
  */
-symb* st_get_symbol(char *str)
+symb* st_get_symbol(const char *str)
 {
     //Find hash and key of symbol
     unsigned long int hash = st_hash(str);
@@ -162,6 +163,8 @@ int st_expand()
  */
 int st_destroy()
 {
+    
+    if(st_table == NULL) return -1; //table not initialised
     int i;
     stable *curr, *prev;
     for(i = 0; i < st_size; i++){
@@ -186,13 +189,14 @@ int st_destroy()
 
     //All symbols have been freed, all collision LLs have been freed
     free(st_table);
+    st_table = NULL;
     if(DEBUG) printf("Freed symbol table\n");
     return 0;
 }
 
 /* st_destroy_helper frees all memory associated with a specified symbol
  * This is origin agnostic; any symbol may be freed using this function
- * Any errors are reported as nonzero error codes
+ * No error is returned; must check for invalid frees somehow
  */
 int st_destroy_helper(symb* symbol)
 {

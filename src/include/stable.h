@@ -25,7 +25,7 @@ extern stable* st_table;
 extern unsigned long int st_hash(const char *);
 extern unsigned long int st_hash_helper(int, const char *);
 extern symb* st_add_symbol(char *, char *, int, int, int);
-extern symb* st_get_symbol(char *);
+extern symb* st_get_symbol(const char *);
 extern int st_init();
 extern int st_expand();
 extern int st_destroy();
