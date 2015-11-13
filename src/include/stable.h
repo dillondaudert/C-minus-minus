@@ -5,8 +5,6 @@
 #define VAR 0
 #define PROC 1
 
-extern int st_size;
-extern stable* st_table;
 
 typedef struct {
     char *name; //The identifier
@@ -16,13 +14,16 @@ typedef struct {
     int size; //in bytes
 } symb;
 
-typedef struct {
+typedef struct _stable{
     symb* value; //The symbol stored here
-    stable* next; //Linked list of collisions
+    struct _stable* next; //Linked list of collisions
 } stable;
 
-extern unsigned long int st_hash(char *);
-extern unsigned long int st_hash_helper(int, char *);
+extern int st_size;
+extern stable* st_table;
+
+extern unsigned long int st_hash(const char *);
+extern unsigned long int st_hash_helper(int, const char *);
 extern symb* st_add_symbol(char *, char *, int, int, int);
 extern symb* st_get_symbol(char *);
 extern int st_init();

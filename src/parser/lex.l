@@ -7,6 +7,7 @@ E	([Ee][+-]?{D}+)
 %{
 #include "grammar.tab.h"
 #include <string.h>
+extern void yyerror(const char *);
 %}
 
 /* Options to suppress unused functions */

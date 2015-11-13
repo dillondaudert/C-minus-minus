@@ -14,7 +14,7 @@ unsigned long int st_hash(const char *str)
 {
     int i = strlen(str) - 1; //str[] 0-indexed
     unsigned long int hash = st_hash_helper(i, str);
-    if(DEBUG) printf("st_hash for %s is %lu\n", str, hash;
+    if(DEBUG) printf("st_hash for %s is %lu\n", str, hash);
     return hash;
 }
 
@@ -24,7 +24,8 @@ unsigned long int st_hash(const char *str)
 unsigned long int st_hash_helper(int i, const char *str)
 {
     if(i < 0) return 1;
-    return st_hash_helper(i--) * (33 ^ str[i])
+    int newi = i - 1;
+    return st_hash_helper(newi, str) * (33 ^ str[i]);
 }
 
 /* st_add_symbol adds a new symbol struct to the symbol table (hash map)
@@ -37,9 +38,10 @@ symb* st_add_symbol(char *name, char *addr, int offset, int type, int size)
     //Find hash key for new struct
     unsigned long int hash = st_hash(name);    
     int key = hash % st_size;
+    symb *new;
 
     //Allocate space for new symbol
-    if( symb* new = malloc(sizeof(symb)) == NULL){
+    if( (new = malloc(sizeof(symb))) == NULL){
         fprintf(stderr, "Error 1 in st_add_symbol for value %s", name);
         return NULL;
     }
@@ -58,32 +60,34 @@ symb* st_add_symbol(char *name, char *addr, int offset, int type, int size)
     }else{
         //Collision, find next avail. and check for presence
         stable* curr = &st_table[key];
+        stable* prev = curr;
 
         //While curr is not NULL
-        while( ; curr != NULL; curr = curr->next){
+        for(; curr != NULL; prev = curr, curr = (stable *)curr->next){
             //If the symbol is already in the hash map
-            if(strcmp(curr->value.name, new->name) == 0){
+            if(strcmp(curr->value->name, new->name) == 0){
                 if(DEBUG) printf("st_add, %s already located at %d:%s\n", name, 
                                                                           key,
-                                                             curr->value.name);
+                                                             curr->value->name);
                 return curr->value;
             }
             //If symbol not yet found and collision LL is exhausted
-            if(curr->next == NULL){
-                //Collision but not found, add to LL
-                //New link in stable chain
-                if( stable* new_l = malloc(sizeof(stable)) == NULL){
-                    fprintf(stderr, "Error 2 in st_add_symbol for value %s\n", name);
-                    return NULL;
-                }
-                //Add symbol to link
-                new_l->value = new;
-                curr->next = new_l;
-                if(DEBUG) printf("st_add, added %s to collision LL at %d\n", 
-                                                           name, key);
-                return key;                
-            }
         }
+
+        //Collision but not found, add to LL
+        //New link in stable chain
+        struct _stable *new_l;
+        if( (new_l = (struct _stable *)malloc(sizeof(struct _stable))) == NULL){
+            fprintf(stderr, "Error 2 in st_add_symbol for value %s\n", name);
+            return NULL;
+        }
+        //Add symbol to link
+        new_l->value = new;
+        prev->next = new_l;
+        if(DEBUG) printf("st_add, added %s to collision LL at %d\n", 
+                                                   name, key);
+        return new;                
+
     }
 }
 
@@ -91,7 +95,7 @@ symb* st_add_symbol(char *name, char *addr, int offset, int type, int size)
  * If the symbol is found, a pointer to it is returned
  * else, NULL is returned
  */
-symb* st_get_symbol(const char *str)
+symb* st_get_symbol(char *str)
 {
     //Find hash and key of symbol
     unsigned long int hash = st_hash(str);
@@ -114,8 +118,8 @@ symb* st_get_symbol(const char *str)
 
     }else{
         //Check collision LL for the symbol
-        stable* curr = st_table[key].next;
-        while( ; curr != NULL; curr = curr->next){
+        stable* curr = (stable *)st_table[key].next;
+        for( ; curr != NULL; curr = (stable *)curr->next){
             //Check LL for symbol
             if(strcmp(curr->value->name, str) == 0){
                 //Symbol found
@@ -134,9 +138,10 @@ symb* st_get_symbol(const char *str)
 int st_init()
 {
     //The symbol table is called st_table
-    if( st_table = malloc(sizeof(stable) * st_size) == NULL){
+    if( (st_table = malloc(sizeof(stable) * st_size)) == NULL){
         return -1;
     }
+    if(DEBUG) printf("st_init created the symbol table hash map\n");
 
     return 0;
     
@@ -158,7 +163,7 @@ int st_expand()
 int st_destroy()
 {
     int i;
-    stable* curr, prev;
+    stable *curr, *prev;
     for(i = 0; i < st_size; i++){
         //For every array location, delete value and collision LL
         curr = &st_table[i];
@@ -168,12 +173,12 @@ int st_destroy()
         st_destroy_helper(curr->value);
         if(DEBUG) printf("Freed symbol at position %d\n", i);
         //Iterate over collision LL, free symbols and their LL node
-        while(curr = curr->next; curr != NULL; ){
+        while((curr = (stable *)curr->next) != NULL){
             //Free symbol here
             st_destroy_helper(curr->value);
             if(DEBUG) printf("Freed symbol at position %d\n", i);
             prev = curr;
-            curr = curr->next;
+            curr = (stable *)curr->next;
             free(prev);
             if(DEBUG) printf("Freed link in collision LL at %d\n", i);
         }
@@ -191,8 +196,8 @@ int st_destroy()
  */
 int st_destroy_helper(symb* symbol)
 {
-    free(symb->name);
-    free(symb->addr);
-    free(symb);
+    free(symbol->name);
+    free(symbol->addr);
+    free(symbol);
     return 0;
 }

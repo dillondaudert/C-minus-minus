@@ -18,4 +18,7 @@ flex: lex.l
 	flex lex.l
 
 clean: 
+	rm *.o 
+
+realclean: 
 	rm *.o grammar.tab.h grammar.tab.c lex.yy.c cmm
