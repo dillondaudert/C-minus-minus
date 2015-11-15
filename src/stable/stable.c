@@ -153,7 +153,7 @@ symb* st_get_symbol(const char *str)
 int st_init()
 {
     //The symbol table is called st_table
-    if( (st_table = malloc(sizeof(stable) * st_size)) == NULL){
+    if( (st_table = calloc(st_size, sizeof(stable))) == NULL){
         return -1;
     }
     if(DEBUG) printf("st_init created the symbol table hash map\n");
