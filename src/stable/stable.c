@@ -9,10 +9,14 @@ stable* st_table = NULL;
 
 /*
  * st_hash return the hash key for the given string
+ * If the length of the input string is 0, -1 is returned
  */
 unsigned long int st_hash(const char *str)
 {
-    int i = strlen(str) - 1; //str[] 0-indexed
+    //str[] is 0-indexed
+    int i = strlen(str) - 1;
+    //if the input string is length 0
+    if(i < 0) return -1;
     unsigned long int hash = st_hash_helper(i, str);
     if(DEBUG) printf("st_hash for %s is %lu\n", str, hash);
     return hash;
@@ -36,7 +40,7 @@ symb* st_create_symbol(char *name, char *addr, int offset, int type, int size)
 {
     symb *new;
     
-    if( (new = malloc(sizeof(symb))) == NULL){
+    if( (new = calloc(1, sizeof(symb))) == NULL){
         fprintf(stderr, "Error in st_create_symbol for symb %s\n", name);
         return NULL;
     }
@@ -89,7 +93,7 @@ symb* st_add_symbol(char *name, char *addr, int offset, int type, int size)
         //Collision but not found, add to LL
         //New link in stable chain
         struct _stable *new_l;
-        if( (new_l = (struct _stable *)malloc(sizeof(struct _stable))) == NULL){
+        if( (new_l = (struct _stable *)calloc(1, sizeof(struct _stable))) == NULL){
             fprintf(stderr, "Error 2 in st_add_symbol for value %s\n", name);
             return NULL;
         }
@@ -190,11 +194,12 @@ int st_destroy()
         st_destroy_helper(curr->value);
         if(DEBUG) printf("Freed symbol at position %d\n", i);
         //Iterate over collision LL, free symbols and their LL node
-        while((curr = (stable *)curr->next) != NULL){
-            //Free symbol here
+        curr = (stable *)curr->next;
+        while(curr != NULL){
+            //Free symbol here; there will always be one if a LL exists
             st_destroy_helper(curr->value);
-            if(DEBUG) printf("Freed symbol at position %d\n", i);
-            prev = curr;
+            if(DEBUG) printf("Freed LL symbol at position %d\n", i);
+            prev = curr; 
             curr = (stable *)curr->next;
             free(prev);
             if(DEBUG) printf("Freed link in collision LL at %d\n", i);
