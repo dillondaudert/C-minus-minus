@@ -23,7 +23,7 @@ void setUp(void)
 
 void tearDown(void)
 {
-    st_destroy();
+    TEST_ASSERT_EQUAL(0,st_destroy());
 }
 
 /******************* st_init() tests ******************************************/
@@ -44,7 +44,7 @@ void test_st_hash_names_success(void)
 
 void test_st_hash_names_fail(void)
 {
-    TEST_IGNORE();
+    TEST_ASSERT_EQUAL_INT32(-1, st_hash(""));
 }
 
 /******************* st_add_symbol tests **************************************/
