@@ -29,6 +29,27 @@ unsigned long int st_hash_helper(int i, const char *str)
     return st_hash_helper(newi, str) * (33 ^ str[i]);
 }
 
+/* st_create_symbol creates a symbol from the input parameters
+ * A pointer to this symbol is returned
+ */
+symb* st_create_symbol(char *name, char *addr, int offset, int type, int size)
+{
+    symb *new;
+    
+    if( (new = malloc(sizeof(symb))) == NULL){
+        fprintf(stderr, "Error in st_create_symbol for symb %s\n", name);
+        return NULL;
+    }
+
+    new->name = name;
+    new->addr = addr;
+    new->offset = offset;
+    new->type = type;
+    new->size = size;
+
+    return new;
+}
+
 /* st_add_symbol adds a new symbol struct to the symbol table (hash map)
  * On successful insertion or if symbol is already in table, return pointer to 
  * it.
@@ -40,21 +61,11 @@ symb* st_add_symbol(char *name, char *addr, int offset, int type, int size)
     unsigned long int hash = st_hash(name);    
     int key = hash % st_size;
     symb *new;
-
-    //Allocate space for new symbol
-    if( (new = malloc(sizeof(symb))) == NULL){
-        fprintf(stderr, "Error 1 in st_add_symbol for value %s", name);
-        return NULL;
-    }
-    new->name = name;
-    new->addr = addr;
-    new->offset = offset;
-    new->type = type;
-    new->size = size;
-
     //Put symbol in stable hash map
     if( st_table[key].value == NULL ){ 
-        //No collision, insert
+        //No collision, make new symbol
+        new = st_create_symbol(name, addr, offset, type, size);
+
         st_table[key].value = new;
         if(DEBUG) printf("st_add added %s at position %d\n", name, key);
         return new;
@@ -66,7 +77,7 @@ symb* st_add_symbol(char *name, char *addr, int offset, int type, int size)
         //While curr is not NULL
         for(; curr != NULL; prev = curr, curr = (stable *)curr->next){
             //If the symbol is already in the hash map
-            if(strcmp(curr->value->name, new->name) == 0){
+            if(strcmp(curr->value->name, name) == 0){
                 if(DEBUG) printf("st_add, %s already located at %d:%s\n", name, 
                                                                           key,
                                                              curr->value->name);
@@ -82,6 +93,9 @@ symb* st_add_symbol(char *name, char *addr, int offset, int type, int size)
             fprintf(stderr, "Error 2 in st_add_symbol for value %s\n", name);
             return NULL;
         }
+        //Create new symbol to add
+        new = st_create_symbol(name, addr, offset, type, size);
+
         //Add symbol to link
         new_l->value = new;
         prev->next = new_l;
@@ -159,7 +173,7 @@ int st_expand()
 }
 /* st_destroy frees all memory associated with the structs in 
  * the symbol table.
- * A nonzero is returned for any error encountered.
+ * A zero is returned for successful execution
  */
 int st_destroy()
 {

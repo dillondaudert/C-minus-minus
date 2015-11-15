@@ -1,7 +1,7 @@
 #Makefile for the test runners ...
 
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -Wpointer-arith -Wcast-align -Wwrite-strings -Wswitch-default -Wunreachable-code -Winit-self -Wmissing-field-initializers -Wno-unknown-pragmas -Wundef
+CFLAGS = -g -Wall -Wextra -Werror -Wpointer-arith -Wcast-align -Wwrite-strings -Wswitch-default -Wunreachable-code -Winit-self -Wmissing-field-initializers -Wno-unknown-pragmas -Wundef
 
 TARGET_BASE1=st_test
 TARGET_EXTENSION=.out
