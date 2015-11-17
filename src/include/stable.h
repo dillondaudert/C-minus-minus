@@ -3,7 +3,8 @@
  */
 
 #define VAR 0
-#define PROC 1
+#define ARR 1
+#define PROC 2
 
 
 typedef struct {
@@ -12,6 +13,7 @@ typedef struct {
     int offset; //Offset from that frame ptr
     int type; //VAR or PROC
     int size; //in bytes
+    int arrsize; //array size
 } symb;
 
 typedef struct _stable{
@@ -24,8 +26,8 @@ extern stable* st_table;
 
 extern unsigned long int st_hash(const char *);
 extern unsigned long int st_hash_helper(int, const char *);
-extern symb* st_create_symbol(char *, char *, int, int, int);
-extern symb* st_add_symbol(char *, char *, int, int, int);
+extern symb* st_create_symbol(char *, char *, int, int, int, int);
+extern symb* st_add_symbol(char *, char *, int, int, int, int);
 extern symb* st_get_symbol(const char *);
 extern int st_init();
 extern int st_expand();

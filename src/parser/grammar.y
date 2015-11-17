@@ -3,16 +3,23 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "cmm.h"
 #include "cas.h"
+#include "lval.h"
+#include "stable.h"
 void yyerror(const char *);
 int yylex(void);
+
+/*Global variables*/
+//g_label is the current label scope. It is a name prefixed with '_'
+char *g_label;
 %}
 
 /*enable improved syntax error checking*/
 %define parse.lac full
 %define parse.error verbose
-/*define yylval type*/
-%define api.value.type {int}
+/*define yylval type in lval.h*/
+%define api.value.type {lval}
 
 %start program
 
@@ -38,7 +45,9 @@ int yylex(void);
 
 /*grammar rules**********/
 
-program		: decl_list procs
+program		: decl_list 
+			{/*?*/;} 
+			procs
 			{;}
 		| procs
 			{;}
@@ -54,14 +63,29 @@ proc_decl	: proc_head proc_body
 			{;}
 		;
 
-proc_head	: func_decl decl_list
+proc_head	: func_decl 
+			{/*Write function info out to the assembly from $$
+			  * \t.globl LABEL 
+			  * \t.type LABEL @function
+			  * LABEL:\tnop   */
+			  //Add format write? Yes plz
+			  cas_writeln("\t.globl %s");}
+			decl_list
 			{;}
 		| func_decl
 			{;}
 		;
 
 func_decl	: type IDENTIFIER LP RP LBR
-			{;}
+			{/*Create new function sym in s.table.
+			  * type(PROC), addr(LABEL), size (of retval)*/
+			 symb *s;
+			 s = st_add_symbol($2.name, strdup($2.name), 0, PROC,
+					   $1.size, 0);
+			 if(DEBUG) printf("Added process %s to stable\n"
+			                  , s->name);
+			 $$.name = $2.name;}
+			 
 		;
 
 proc_body	: statement_list RBR
@@ -69,27 +93,86 @@ proc_body	: statement_list RBR
 		;
 
 decl_list	: type ident_list SC
-			{;}
+			{/*Here we have the size and the symbols in the table*
+			  * The symbols are listed in $2.hashes and there are
+			  * $2.count of them in the list */
+			 int size = $1.size;
+			 int i, offset = 0;
+			 symb *s;
+			 for(i = 0; i < $2.count; i++){
+			     s = st_get_symbol($1.names[i]);
+			     s->size = size;
+			     if(s->type == VAR){
+				 s->offset = offset;
+			         offset += size; 
+			     }else if(s->type == ARR){
+			         s->offset = offset;
+				 offset += size*arrsize;
+			     }else{
+				 yyerror("Not expecting type %d in decl_list\n"
+					 , s->type);
+				 YYERROR;
+			     }
+			     if(DEBUG) printf("Symbol %s updated with size %d, \						     offset %d\n", s->size, s->offset);
+			 }
+			 //Now all symbols are updated with size and offset
+			 ;}
 		| decl_list type ident_list SC
 			{;}
 		;
 
 ident_list	: var_decl
-			{;}
+			{/*add first variable to symbol table*/
+			 int arrsize = 0;
+			 //get size of array 
+			 if(type == ARR) arrsize = $1.arrsize;
+			 $$.count = 1;
+			 //Save name in list
+			 $$.names = malloc(sizeof(char *));
+			 $$.names[0] = strdup($1.name);
+			 if(DEBUG) printf("Added %s to $$names, count=%d\n", 
+					  $$.names[0], $$.count);
+			 //Add symbol without size into table
+			 st_add_symbol($1.name, strdup(g_label), 0, $1.type,
+				       0, arrsize);
+			 }
 		| ident_list CM var_decl
-			{;}
+			{/*add subsequent symbols to table*/
+			 int arrsize = 0;
+			 //get size of array 
+			 if(type == ARR) arrsize = $3.arrsize;
+			 //Pass up the count of var declarations
+			 $$.count = $1.count + 1;
+			 //Add space to names list for new variable
+			 realloc($1.names, sizeof(char *)*$$.count);
+			 $$.names = $1.names;
+			 //Put new name at end of list to pass up
+			 $$.names[$$.count-1] = strdup($3.name);
+			 if(DEBUG) printf("Added %s to $$names, count=%d\n", 
+					  $$.names[$$.count-1], $$.count);
+			 //New symbol has size 0, offset will be size*count
+			 // * arrsize if it isn't 0.
+			 st_add_symbol($3.name, strdup(g_label), $1.count, 
+				       $3.type, arrsize);
+			 }
+			
 		;
 
 var_decl	: IDENTIFIER
-			{;}
+			{/*Pass up a new variable symbol*/
+			 $$.name = $1.name;
+			 $$.type = VAR;}
 		| IDENTIFIER LBK INTCON RBK
-			{;}
+			{/*Pass up a new array symbol*/
+			 $$.name = $1.name;
+			 $$.type = ARR;
+			 $$.arrsize = $3.arrsize}
 		;
 
 type		: INT
-			{;}
+			{$$.size = 4;}
 		| FLOAT 
-			{;}
+			{$$.size = 8;}
 		;
 
 statement_list	: statement

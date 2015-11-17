@@ -36,7 +36,7 @@ unsigned long int st_hash_helper(int i, const char *str)
 /* st_create_symbol creates a symbol from the input parameters
  * A pointer to this symbol is returned
  */
-symb* st_create_symbol(char *name, char *addr, int offset, int type, int size)
+symb* st_create_symbol(char *name, char *addr, int offset, int type, int size, int arrsize)
 {
     symb *new;
     
@@ -50,6 +50,7 @@ symb* st_create_symbol(char *name, char *addr, int offset, int type, int size)
     new->offset = offset;
     new->type = type;
     new->size = size;
+    new->arrsize = arrsize;
 
     return new;
 }
@@ -59,7 +60,7 @@ symb* st_create_symbol(char *name, char *addr, int offset, int type, int size)
  * it.
  * If an error occurs, return NULL.
  */
-symb* st_add_symbol(char *name, char *addr, int offset, int type, int size)
+symb* st_add_symbol(char *name, char *addr, int offset, int type, int size, int arrsize)
 {
     //Find hash key for new struct
     unsigned long int hash = st_hash(name);    
@@ -68,7 +69,7 @@ symb* st_add_symbol(char *name, char *addr, int offset, int type, int size)
     //Put symbol in stable hash map
     if( st_table[key].value == NULL ){ 
         //No collision, make new symbol
-        new = st_create_symbol(name, addr, offset, type, size);
+        new = st_create_symbol(name, addr, offset, type, size, arrsize);
 
         st_table[key].value = new;
         if(DEBUG) printf("st_add added %s at position %d\n", name, key);
@@ -98,7 +99,7 @@ symb* st_add_symbol(char *name, char *addr, int offset, int type, int size)
             return NULL;
         }
         //Create new symbol to add
-        new = st_create_symbol(name, addr, offset, type, size);
+        new = st_create_symbol(name, addr, offset, type, size, arrsize);
 
         //Add symbol to link
         new_l->value = new;
