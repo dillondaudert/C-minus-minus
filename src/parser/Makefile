@@ -2,14 +2,17 @@
 
 CC = gcc
 CFLAGS = -Wall --std=gnu99 -O3 -flto
+LDFLAGS = -O3 -flto
+INC = -I../assembly
+casdir = ../assembly
 
 all: parser
 
 parser: objs
-	$(CC) $(CFLAGS) grammar.tab.o lex.yy.o parser.o -o cmm	
+	$(CC) $(LDFLAGS) grammar.tab.o lex.yy.o parser.o caswriter.o -o cmm	
 
-objs: bison flex parser.c
-	$(CC) -c $(CFLAGS) grammar.tab.c lex.yy.c parser.c
+objs: bison flex parser.c $(casdir)/caswriter.c
+	$(CC) -c $(INC) $(CFLAGS) $(casdir)/caswriter.c grammar.tab.c lex.yy.c parser.c 
 
 bison: grammar.y
 	bison -d -t grammar.y
