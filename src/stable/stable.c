@@ -66,6 +66,8 @@ symb* st_add_symbol(char *name, char *addr, int offset, int type, int size, int 
     unsigned long int hash = st_hash(name);    
     int key = hash % st_size;
     symb *new;
+    if(DEBUG) printf("Adding new symbol: %s, %s, offset: %d, type: %d, size: %d, arr: %d\n",
+                     name, addr, offset, type, size, arrsize);
     //Put symbol in stable hash map
     if( st_table[key].value == NULL ){ 
         //No collision, make new symbol

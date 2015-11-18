@@ -3,10 +3,11 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "cmm.h"
+#include "stable.h"
 #include "cas.h"
 #include "lval.h"
-#include "stable.h"
 void yyerror(const char *);
 int yylex(void);
 
@@ -19,9 +20,9 @@ char *g_label;
 %define parse.lac full
 %define parse.error verbose
 /*define yylval type in lval.h*/
-%define api.value.type {lval}
+%define api.value.type {struct lval}
 
-%start program
+%start start
 
 /*token declarations*/
 %token ELSE EXIT FLOAT IF INT
@@ -45,9 +46,14 @@ char *g_label;
 
 /*grammar rules**********/
 
-program		: decl_list 
-			{/*?*/;} 
-			procs
+start		: /* empty */
+			{st_init();
+			 g_label = "_gp";
+			 cas_prol();}
+		  program {;}
+		;
+
+program		: decl_list procs
 			{;}
 		| procs
 			{;}
@@ -69,7 +75,13 @@ proc_head	: func_decl
 			  * \t.type LABEL @function
 			  * LABEL:\tnop   */
 			  //Add format write? Yes plz
-			  cas_writeln("\t.globl %s");}
+			  cas_write("\t.globl ");
+			  cas_writeln($1.name);
+			  cas_write("\t.type ");
+			  cas_write($1.name);
+			  cas_writeln("@function");
+			  cas_write($1.name);
+			  cas_writeln(":\tnop");}
 			decl_list
 			{;}
 		| func_decl
@@ -80,7 +92,8 @@ func_decl	: type IDENTIFIER LP RP LBR
 			{/*Create new function sym in s.table.
 			  * type(PROC), addr(LABEL), size (of retval)*/
 			 symb *s;
-			 s = st_add_symbol($2.name, strdup($2.name), 0, PROC,
+			 char *addr = strdup($2.name);
+			 s = st_add_symbol($2.name, addr, 0, PROC,
 					   $1.size, 0);
 			 if(DEBUG) printf("Added process %s to stable\n"
 			                  , s->name);
@@ -100,32 +113,55 @@ decl_list	: type ident_list SC
 			 int i, offset = 0;
 			 symb *s;
 			 for(i = 0; i < $2.count; i++){
-			     s = st_get_symbol($1.names[i]);
+			     s = st_get_symbol($2.names[i]);
 			     s->size = size;
 			     if(s->type == VAR){
 				 s->offset = offset;
 			         offset += size; 
 			     }else if(s->type == ARR){
 			         s->offset = offset;
-				 offset += size*arrsize;
+				 offset += size*s->arrsize;
 			     }else{
-				 yyerror("Not expecting type %d in decl_list\n"
-					 , s->type);
+				 yyerror("Not expecting type in decl_list\n");
 				 YYERROR;
 			     }
-			     if(DEBUG) printf("Symbol %s updated with size %d, \						     offset %d\n", s->size, s->offset);
+			     if(DEBUG) printf("Symbol %s updated with size %d, offset %d\n"
+						, s->name,s->size, s->offset);
 			 }
 			 //Now all symbols are updated with size and offset
 			 ;}
 		| decl_list type ident_list SC
-			{;}
+			{/*Here we have the size and the symbols in the table*
+			  * The symbols are listed in $2.hashes and there are
+			  * $2.count of them in the list */
+			 int size = $2.size;
+			 int i, offset = 0;
+			 symb *s;
+			 for(i = 0; i < $3.count; i++){
+			     s = st_get_symbol($3.names[i]);
+			     s->size = size;
+			     if(s->type == VAR){
+				 s->offset = offset;
+			         offset += size; 
+			     }else if(s->type == ARR){
+			         s->offset = offset;
+				 offset += size*s->arrsize;
+			     }else{
+				 yyerror("Not expecting type in decl_list\n");
+				 YYERROR;
+			     }
+			     if(DEBUG) printf("Symbol %s updated with size %d,offset %d\n"
+					,s->name, s->size, s->offset);
+			 }
+			;}
+			
 		;
 
 ident_list	: var_decl
 			{/*add first variable to symbol table*/
 			 int arrsize = 0;
 			 //get size of array 
-			 if(type == ARR) arrsize = $1.arrsize;
+			 if($1.type == ARR) arrsize = $1.arrsize;
 			 $$.count = 1;
 			 //Save name in list
 			 $$.names = malloc(sizeof(char *));
@@ -140,7 +176,7 @@ ident_list	: var_decl
 			{/*add subsequent symbols to table*/
 			 int arrsize = 0;
 			 //get size of array 
-			 if(type == ARR) arrsize = $3.arrsize;
+			 if($3.type == ARR) arrsize = $3.arrsize;
 			 //Pass up the count of var declarations
 			 $$.count = $1.count + 1;
 			 //Add space to names list for new variable
@@ -153,7 +189,7 @@ ident_list	: var_decl
 			 //New symbol has size 0, offset will be size*count
 			 // * arrsize if it isn't 0.
 			 st_add_symbol($3.name, strdup(g_label), $1.count, 
-				       $3.type, arrsize);
+				       $3.type, 0, arrsize);
 			 }
 			
 		;
@@ -166,7 +202,7 @@ var_decl	: IDENTIFIER
 			{/*Pass up a new array symbol*/
 			 $$.name = $1.name;
 			 $$.type = ARR;
-			 $$.arrsize = $3.arrsize}
+			 $$.arrsize = $3.arrsize;}
 		;
 
 type		: INT

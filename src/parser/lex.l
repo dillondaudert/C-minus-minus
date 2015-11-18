@@ -7,12 +7,11 @@ E	([Ee][+-]?{D}+)
 %{
 #include "grammar.tab.h"
 #include <string.h>
+#include "lval.h"
 extern void yyerror(const char *);
 %}
 
 /* Options to suppress unused functions */
-%option nounput
-%option noinput
 
 %x COMMENT
 %x STRSTATE
@@ -24,8 +23,8 @@ extern void yyerror(const char *);
 (?:exit)		{return EXIT;}
 (?:float)		{return FLOAT;}
 (?:if)			{return IF;}
-(?:int)			{return INT;}
-(?:read)		{return READ;}
+(?:int)			{yylval.size = 4; return INT;}
+(?:read)		{yylval.size = 8; return READ;}
 (?:return)		{return RETURN;}
 (?:while)		{return WHILE;}
 (?:write)		{return WRITE;}
@@ -64,9 +63,9 @@ extern void yyerror(const char *);
 	/* identifiers and strings */
 
 
-{L}{A}*			{return IDENTIFIER;}
-"0"|{NZ}{D}*		{return INTCON;}
-{D}*"."{D}+{E}?		{return FLOATCON;}
+{L}{A}*			{yylval.name = strdup(yytext); return IDENTIFIER;}
+"0"|{NZ}{D}*		{yylval.val.ival = atoi(yytext); return INTCON;}
+{D}*"."{D}+{E}?		{yylval.val.dval = atof(yytext); return FLOATCON;}
 
 \'			{BEGIN(STRSTATE);}
 \"			{BEGIN(STRSTATE);}

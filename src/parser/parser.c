@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "grammar.tab.h"
+#include "cmm.h"
+#include "stable.h"
 #include "cas.h"
+#include "grammar.tab.h"
 
 #define YYPRINT(file, type, value) yyprint (file, type, value)
 
@@ -32,12 +34,17 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    cas_prol();
+//    cas_prol();
+
+    //Initialize symbol table
+//    st_init();
 
     if( (result = yyparse()) != 0 ){
         printf("Syntax error found:\n");
         exit(1);
     }
+
+    st_destroy();
 
     fclose(yyin);
 
