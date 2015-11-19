@@ -18,7 +18,7 @@ unsigned long int st_hash(const char *str)
     //if the input string is length 0
     if(i < 0) return -1;
     unsigned long int hash = st_hash_helper(i, str);
-    if(DEBUG) printf("st_hash for %s is %lu\n", str, hash);
+//  if(DEBUG) printf("st_hash for %s is %lu\n", str, hash);
     return hash;
 }
 

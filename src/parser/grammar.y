@@ -49,8 +49,9 @@ char *g_label;
 start		: /* empty */
 			{st_init();
 			 g_label = "_gp";
-			 cas_prol();}
-		  program {;}
+			 }
+		  program 
+			{;}
 		;
 
 program		: decl_list procs
@@ -70,16 +71,17 @@ proc_decl	: proc_head proc_body
 		;
 
 proc_head	: func_decl 
-			{/*Write function info out to the assembly from $$
-			  * \t.globl LABEL 
-			  * \t.type LABEL @function
-			  * LABEL:\tnop   */
-			  //Add format write? Yes plz
+			{/* Send this function information to the appropriate
+			  * cas_ output files to be written later
+			  */
+                          //Create output string
+                          
+
 			  cas_write("\t.globl ");
 			  cas_writeln($1.name);
 			  cas_write("\t.type ");
 			  cas_write($1.name);
-			  cas_writeln("@function");
+			  cas_writeln(" @function");
 			  cas_write($1.name);
 			  cas_writeln(":\tnop");}
 			decl_list
@@ -113,6 +115,7 @@ decl_list	: type ident_list SC
 			 int i, offset = 0;
 			 symb *s;
 			 for(i = 0; i < $2.count; i++){
+			     if(DEBUG) printf("updating symbol %s\n", $2.names[i]);
 			     s = st_get_symbol($2.names[i]);
 			     s->size = size;
 			     if(s->type == VAR){
@@ -138,6 +141,7 @@ decl_list	: type ident_list SC
 			 int i, offset = 0;
 			 symb *s;
 			 for(i = 0; i < $3.count; i++){
+			     if(DEBUG) printf("updating symbol %s\n", $3.names[i]);
 			     s = st_get_symbol($3.names[i]);
 			     s->size = size;
 			     if(s->type == VAR){
@@ -164,7 +168,7 @@ ident_list	: var_decl
 			 if($1.type == ARR) arrsize = $1.arrsize;
 			 $$.count = 1;
 			 //Save name in list
-			 $$.names = malloc(sizeof(char *));
+			 $$.names = calloc(1, sizeof(char *));
 			 $$.names[0] = strdup($1.name);
 			 if(DEBUG) printf("Added %s to $$names, count=%d\n", 
 					  $$.names[0], $$.count);
