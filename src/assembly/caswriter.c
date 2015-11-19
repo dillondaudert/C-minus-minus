@@ -10,6 +10,11 @@
 
 FILE *casout;
 
+int cas_writeln(char *);
+int cas_write(char *);
+int cas_open(char *);
+
+
 /******************* Internal strings and string arrays ***********************/
 
 //Static (data) section
@@ -76,6 +81,17 @@ int cas_prol()
     return 0; 
 }
 
+/* cas_epil writes the epilogue to the assembly program
+ *
+ */
+int cas_epil()
+{
+    if(casout == NULL) return -1;
+    char *l1 = "\tleave\n\tret";
+    if( cas_write(l1) == -1) return -1;
+    return 0;
+}
+
 /* cas_writeln is a generic write function that all other cas_ functions call
  * to write to the assembly file. It ends all writes with a new line char.
  * It returns the number of bytes written. -1 on error
@@ -97,6 +113,7 @@ int cas_write(char *output)
 {
     int nwritt;
     if(casout == NULL) return -1;
+    if(output == NULL) return -1;
     nwritt = fwrite(output, 1, strlen(output), casout) * strlen(output);
     return nwritt;
 }
@@ -108,25 +125,25 @@ int cas_write(char *output)
  * sent to caswriter by the parser and write them out to the assembly file
  * in proper order.
  */
-int cas_writer()
+int cas_writer(char *path)
 {
     //Open assembly output file
-    cas_open();
+    cas_open(path);
     //Write the assembly sections in order
     //Prologue
     cas_prol();
     //Static/data section
-    cas_write(sec_static);
+    if(sec_static != NULL) cas_write(sec_static);
     //String constants section
-    cas_write(sec_str_const);
+    if(sec_str_const != NULL) cas_write(sec_str_const);
     //Global section
-    cas_write(sec_globals);
+    if(sec_globals != NULL)  cas_write(sec_globals);
     //Process heads section
-    cas_write(sec_proc_heads);
+    if(sec_proc_heads != NULL) cas_write(sec_proc_heads);
     //Process var declarations
-    cas_write(sec_proc_decls);
+    if(sec_proc_decls != NULL) cas_write(sec_proc_decls);
     //Process bodies
-    cas_write(sec_proc_bods);
+    if(sec_proc_bods != NULL) cas_write(sec_proc_bods);
     //Epilogue
     cas_epil();
   
@@ -160,7 +177,6 @@ int cas_static(char *statics)
     strcat(tmp, statics);
     sec_static = strdup(tmp);
     //Free strings
-    free(statics);
     free(tmp);
     return 0;
 }
@@ -168,7 +184,7 @@ int cas_static(char *statics)
 int cas_str_const(int num, char *strc)
 {
     //Initialize the string constant section if empty
-    if( sec_str_cont == NULL ){
+    if( sec_str_const == NULL ){
         if( ( sec_str_const = calloc(4, sizeof(char)) ) == NULL ){
             printf("Calloc error in caswriter.c:cas_str_const\n");
             exit(0);
@@ -185,7 +201,6 @@ int cas_str_const(int num, char *strc)
     strcat(tmp, strc);
     sec_str_const = strdup(tmp);
     //Free strings
-    free(strc);
     free(tmp);
     return 0;
 }
@@ -210,7 +225,6 @@ int cas_global(char *globals)
     strcat(tmp, globals);
     sec_globals = strdup(tmp);
     //Free strings
-    free(globals);
     free(tmp);
     return 0;
 }
@@ -235,7 +249,6 @@ int cas_proc_head(char *name, char *defin)
     strcat(tmp,defin);
     sec_proc_heads = strdup(tmp);
     //Free strings
-    free(defin);
     free(tmp);
     return 0;
 }
@@ -260,7 +273,6 @@ int cas_proc_decls(char *name, char *decls)
     strcat(tmp, decls);
     sec_proc_decls = strdup(tmp);
     //Free strings
-    free(decls);
     free(tmp);
     return 0;
 }
@@ -285,7 +297,6 @@ int cas_proc_body(char *name, char *body)
     strcat(tmp,body);
     sec_proc_bods = strdup(tmp);
     //Free strings
-    free(body);
     free(tmp);
     return 0;
 }

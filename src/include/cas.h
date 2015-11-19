@@ -15,7 +15,7 @@
 
 extern FILE *casout;
 
-extern int cas_writer();
+extern int cas_writer(char *);
 extern int cas_static(char *);
 extern int cas_str_const(int, char *);
 extern int cas_global(char *);

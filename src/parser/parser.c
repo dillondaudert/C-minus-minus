@@ -29,11 +29,6 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    if( cas_open(argv[1]) == -1){
-        printf("Unable to create assembly file %s.s\n", argv[1]);
-        exit(1);
-    }
-
 //    cas_prol();
 
     //Initialize symbol table
@@ -44,6 +39,9 @@ int main(int argc, char** argv)
         exit(1);
     }
 
+    //Output the assembly file
+    cas_writer(argv[1]);
+    //Destroy the symbol table
     st_destroy();
 
     fclose(yyin);

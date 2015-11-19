@@ -74,16 +74,16 @@ proc_head	: func_decl
 			{/* Send this function information to the appropriate
 			  * cas_ output files to be written later
 			  */
-                          //Create output string
                           
-
-			  cas_write("\t.globl ");
-			  cas_writeln($1.name);
-			  cas_write("\t.type ");
-			  cas_write($1.name);
-			  cas_writeln(" @function");
-			  cas_write($1.name);
-			  cas_writeln(":\tnop");}
+			  cas_global("\t.globl ");
+			  cas_global($1.name);
+                          cas_global("\n");
+			  cas_global("\t.type ");
+			  cas_global($1.name);
+			  cas_global(" @function\n");
+                          //Write beginning of function section
+			  cas_proc_head($1.name, $1.name);
+			  cas_proc_head($1.name, ":\tnop\n");}
 			decl_list
 			{;}
 		| func_decl
@@ -169,31 +169,34 @@ ident_list	: var_decl
 			 $$.count = 1;
 			 //Save name in list
 			 $$.names = calloc(1, sizeof(char *));
-			 $$.names[0] = strdup($1.name);
+			 $$.names[0] = $1.name;
 			 if(DEBUG) printf("Added %s to $$names, count=%d\n", 
 					  $$.names[0], $$.count);
 			 //Add symbol without size into table
-			 st_add_symbol($1.name, strdup(g_label), 0, $1.type,
+			 st_add_symbol($$.names[0], strdup(g_label), 0, $1.type,
 				       0, arrsize);
 			 }
 		| ident_list CM var_decl
 			{/*add subsequent symbols to table*/
 			 int arrsize = 0;
+                         int newcount = $1.count + 1;
+                         char **newnames = calloc(newcount, sizeof(char *));
 			 //get size of array 
 			 if($3.type == ARR) arrsize = $3.arrsize;
 			 //Pass up the count of var declarations
-			 $$.count = $1.count + 1;
-			 //Add space to names list for new variable
-			 realloc($1.names, sizeof(char *)*$$.count);
-			 $$.names = $1.names;
-			 //Put new name at end of list to pass up
-			 $$.names[$$.count-1] = strdup($3.name);
+			 $$.count = newcount;
+			 //Copy old name pointers into new list
+			 memcpy(newnames, $1.names, sizeof(char *)*$1.count);
+			 //Add new name to end of list
+			 newnames[newcount-1] = $3.name;
+			 $$.names = newnames;
 			 if(DEBUG) printf("Added %s to $$names, count=%d\n", 
-					  $$.names[$$.count-1], $$.count);
+					  $$.names[newcount-1], $$.count);
 			 //New symbol has size 0, offset will be size*count
 			 // * arrsize if it isn't 0.
-			 st_add_symbol($3.name, strdup(g_label), $1.count, 
-				       $3.type, 0, arrsize);
+			 st_add_symbol($$.names[newcount-1], strdup(g_label)
+                                       , $1.count, $3.type, 0, arrsize);
+			 free($1.names);
 			 }
 			
 		;

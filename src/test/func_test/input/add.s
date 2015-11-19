@@ -5,3 +5,5 @@
 	.globl main
 	.type main @function
 main:	nop
+	leave
+	ret
