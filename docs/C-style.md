@@ -32,24 +32,19 @@ char *var;
 
 Functions
 ```
-//Without prefix
-unsigned long int funcName(int p1, char *p2)
+//
+unsigned long int st_func_name(int p1, char *p2)
 {
     //Four space indents (no tabs)
     ...
 }
 
-//With prefix
-unsigned double st_funcName(int p1, char *p2)
-{
-    ...
-} 
 ```
 
 Flow Control, Boolean Exprs, Arithmetic
 ```
 if( this == that ){
-    //Spaces separate inside of parentheses
+    //Spaces separate inside of flow parentheses
 }
 
 for( i = 0; i < j; i++ ){
@@ -66,7 +61,7 @@ Comments
 /* Function headers, name
  * Description: function purpose, input, output
  */
-unsigned int funcName()
+unsigned int func_name()
 {
     //Internal comments on separate line
     ...
