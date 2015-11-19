@@ -1,4 +1,4 @@
-<h1> Style Guide for C-- </h1>
+<h1> Style Guide for C-- Source Code</h1>
 
 <h3>C files</h3>
 
