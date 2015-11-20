@@ -51,6 +51,7 @@ int cas_open(char *path)
     strcat(caspath, ".s");
     free(newpath);
     if( (casout = fopen(caspath, "w")) == NULL) return -1;
+    free(caspath);
     return 0;
 }
 
@@ -59,6 +60,12 @@ int cas_open(char *path)
  */
 int cas_close()
 {
+    free(sec_static);
+    free(sec_globals);
+    free(sec_str_const);
+    free(sec_proc_heads);
+    free(sec_proc_decls);
+    free(sec_proc_bods);
     if( fclose(casout) == EOF ) return -1;
     return 0;
 }
@@ -133,19 +140,31 @@ int cas_writer(char *path)
     //Prologue
     cas_prol();
     //Static/data section
-    if(sec_static != NULL) cas_write(sec_static);
+    if(sec_static != NULL){
+        cas_write(sec_static);
+        cas_write("\n");
+    }
     //String constants section
-    if(sec_str_const != NULL) cas_write(sec_str_const);
+    if(sec_str_const != NULL) {
+        cas_write(sec_str_const);
+        cas_write("\n");
+    }
     //Global section
-    if(sec_globals != NULL)  cas_write(sec_globals);
+    if(sec_globals != NULL){
+        cas_write(sec_globals);
+        cas_write("\n");
+    }  
     //Process heads section
-    if(sec_proc_heads != NULL) cas_write(sec_proc_heads);
+    if(sec_proc_heads != NULL){
+        cas_write(sec_proc_heads);
+    }
     //Process var declarations
     if(sec_proc_decls != NULL) cas_write(sec_proc_decls);
     //Process bodies
     if(sec_proc_bods != NULL) cas_write(sec_proc_bods);
     //Epilogue
     cas_epil();
+    cas_write("\n");  
   
     //Close the assembly file
     cas_close();
@@ -175,7 +194,8 @@ int cas_static(char *statics)
     strncpy(tmp, sec_static, strlen(sec_static)+1);
     //Concat new string
     strcat(tmp, statics);
-    sec_static = strdup(tmp);
+    free(sec_static);
+    sec_static =strdup(tmp);
     //Free strings
     free(tmp);
     return 0;
@@ -185,48 +205,42 @@ int cas_str_const(int num, char *strc)
 {
     //Initialize the string constant section if empty
     if( sec_str_const == NULL ){
-        if( ( sec_str_const = calloc(4, sizeof(char)) ) == NULL ){
-            printf("Calloc error in caswriter.c:cas_str_const\n");
-            exit(0);
-        }
-        //Null terminate string at beginning
-        sec_str_const[0] = '\0';
-    }
+        sec_str_const = strdup(strc);
+    }else{
 
-    //Allocate new string with space for appending
-    char *tmp = calloc(strlen(sec_str_const)+strlen(strc)+1, sizeof(char));
-    //Copy old statis + null termination
-    strncpy(tmp, sec_str_const, strlen(sec_str_const)+1);
-    //Concat new string
-    strcat(tmp, strc);
-    sec_str_const = strdup(tmp);
-    //Free strings
-    free(tmp);
-    return 0;
+        //Allocate new string with space for appending
+        char *tmp = calloc(strlen(sec_str_const)+strlen(strc)+1, sizeof(char));
+        //Copy old statis + null termination
+        strncpy(tmp, sec_str_const, strlen(sec_str_const)+1);
+        //Concat new string
+        strcat(tmp, strc);
+        free(sec_str_const);
+        sec_str_const = strdup(tmp);
+        //Free strings
+        free(tmp);
+        return 0;
+    }
 }
 
 int cas_global(char *globals)
 {
     //Initialize the static section if empty
     if( sec_globals == NULL ){
-        if( ( sec_globals = calloc(4, sizeof(char)) ) == NULL ){
-            printf("Calloc error in caswriter.c:cas_globals\n");
-            exit(0);
-        }
-        //Null terminate string at beginning
-        sec_globals[0] = '\0';
-    }
+        sec_globals = strdup(globals);
+    }else{
 
-    //Allocate new string with space for appending
-    char *tmp = calloc(strlen(sec_globals)+strlen(globals)+1, sizeof(char));
-    //Copy old statis + null termination
-    strncpy(tmp, sec_globals, strlen(sec_globals)+1);
-    //Concat new string
-    strcat(tmp, globals);
-    sec_globals = strdup(tmp);
-    //Free strings
-    free(tmp);
-    return 0;
+        //Allocate new string with space for appending
+        char *tmp = calloc(strlen(sec_globals)+strlen(globals)+1, sizeof(char));
+        //Copy old statis + null termination
+        strncpy(tmp, sec_globals, strlen(sec_globals)+1);
+        //Concat new string
+        strcat(tmp, globals);
+        free(sec_globals);
+        sec_globals = strdup(tmp);
+        //Free strings
+        free(tmp);
+        return 0;
+    }
 }
 
 int cas_proc_head(char *name, char *defin)
@@ -247,6 +261,7 @@ int cas_proc_head(char *name, char *defin)
     strncpy(tmp, sec_proc_heads, strlen(sec_proc_heads)+1);
     //Concat new string
     strcat(tmp,defin);
+    free(sec_proc_heads);
     sec_proc_heads = strdup(tmp);
     //Free strings
     free(tmp);
@@ -271,6 +286,7 @@ int cas_proc_decls(char *name, char *decls)
     strncpy(tmp, sec_proc_decls, strlen(sec_proc_decls)+1);
     //Concat new string
     strcat(tmp, decls);
+    free(sec_proc_decls);
     sec_proc_decls = strdup(tmp);
     //Free strings
     free(tmp);
@@ -295,6 +311,7 @@ int cas_proc_body(char *name, char *body)
     strncpy(tmp, sec_proc_bods, strlen(sec_proc_bods )+1);
     //Concat new string
     strcat(tmp,body);
+    free(sec_proc_bods);
     sec_proc_bods = strdup(tmp);
     //Free strings
     free(tmp);

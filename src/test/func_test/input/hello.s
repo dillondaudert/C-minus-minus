@@ -2,7 +2,8 @@
 .int_wformat: .string "%d\n"
 .str_wformat: .string "%s\n"
 .int_rformat: .string "%d"
-	.comm _gp, 16, 4
+
+.string_const0: .string "Hello world!"
 
 	.globl main
 	.type main @function

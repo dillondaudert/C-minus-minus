@@ -56,9 +56,8 @@ start		: /* empty */
 
 program		: decl_list procs
 			{
-
+			 //Write out global variables
 			 char *statics = malloc(32 * sizeof(char));
-			 printf("program -> decl_list: %s, %d, %d\n", $1.name, $1.val.ival, $1.size);
 			 snprintf(statics, 32,"\t.comm %s, %d, %d\n", $1.name, $1.val.ival, $1.size);
 			 if(DEBUG) printf("Static: %s\n", statics);
 			 cas_static(statics);
@@ -156,17 +155,24 @@ decl_list	: type ident_list SC
 			     if(DEBUG) printf("Symbol %s updated with size %d, offset %d\n"
 						, s->name,s->size, s->offset);
 			 }
+			 //Free the list of pointers (not the strings themselves)
+			 free($2.names);
 			 //Pass up size and count
 			 $$.size = size; $$.val.ival = size*$2.count;
 			 $$.name = g_label;
+			 //Pass up offset
+			 $$.count = offset;
 			 //Now all symbols are updated with size and offset
 			 ;}
 		| decl_list type ident_list SC
 			{/*Here we have the size and the symbols in the table*
-			  * The symbols are listed in $2.hashes and there are
-			  * $2.count of them in the list */
+			  * The symbols are listed in $3.names and there are
+			  * $3.count of them in the list.
+			  * There are also declarations that come before these.
+			  *  */
 			 int size = $2.size;
-			 int i, offset = 0;
+			 //The offset of these will be after previous declarations
+			 int i, offset = $1.count;
 			 symb *s;
 			 for(i = 0; i < $3.count; i++){
 			     if(DEBUG) printf("updating symbol %s\n", $3.names[i]);
@@ -185,6 +191,8 @@ decl_list	: type ident_list SC
 			     if(DEBUG) printf("Symbol %s updated with size %d,offset %d\n"
 					,s->name, s->size, s->offset);
 			 }
+			 //Free the list of pointers (not the strings themselves)
+			 free($3.names);
 			 //Pass up size and count
 			 $$.size = (size >= $1.size ? size : $1.size); 
 			 $$.val.ival = size*$3.count + $1.val.ival;
@@ -396,7 +404,18 @@ variable	: IDENTIFIER
 		;
 
 string_constant	: STRING
-                        {;}
+                        {char *name = $1.name;
+			 char *addr = strdup(name);
+			 //Add string constant to symbol table
+			 st_add_symbol(name, addr, 0, VAR, $1.size, 0);
+			 //Write string constant to proper assembly section
+			 cas_str_const(0, name);
+			 cas_str_const(0, ": .string \"");
+			 cas_str_const(0, $1.val.sval);
+			 cas_str_const(0, "\"\n");
+			 //Pass up reference 
+			 $$.name = name;
+			 }
 
 		;
 

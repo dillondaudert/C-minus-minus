@@ -1,7 +1,9 @@
 int i, j, k, l;
+float x1, x2;
 
 int main () {
-
+	
+	write('Hello, world');
 	write(10+20);
 	i=1;  k=3; l=4;
 	j = i + k + l;
