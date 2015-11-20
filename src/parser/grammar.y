@@ -55,7 +55,15 @@ start		: /* empty */
 		;
 
 program		: decl_list procs
-			{;}
+			{
+
+			 char *statics = malloc(32 * sizeof(char));
+			 printf("program -> decl_list: %s, %d, %d\n", $1.name, $1.val.ival, $1.size);
+			 snprintf(statics, 32,"\t.comm %s, %d, %d\n", $1.name, $1.val.ival, $1.size);
+			 if(DEBUG) printf("Static: %s\n", statics);
+			 cas_static(statics);
+			 free(statics);
+			 }
 		| procs
 			{;}
 		;
@@ -67,14 +75,20 @@ procs		: proc_decl procs
 		;
 
 proc_decl	: proc_head proc_body
-			{;}
+			{/* Write the function ending
+			  */
+			 cas_proc_body($1.name, "\t.size\t");
+			 cas_proc_body($1.name, $1.name);
+			 cas_proc_body($1.name, ", .-");
+			 cas_proc_body($1.name, $1.name);
+			 cas_proc_body($1.name, "\n");}
 		;
 
 proc_head	: func_decl 
 			{/* Send this function information to the appropriate
 			  * cas_ output files to be written later
 			  */
-                          
+                          $$ = $1;
 			  cas_global("\t.globl ");
 			  cas_global($1.name);
                           cas_global("\n");
@@ -87,7 +101,18 @@ proc_head	: func_decl
 			decl_list
 			{;}
 		| func_decl
-			{;}
+			{
+                          $$ = $1;
+			  cas_global("\t.globl ");
+			  cas_global($1.name);
+                          cas_global("\n");
+			  cas_global("\t.type ");
+			  cas_global($1.name);
+			  cas_global(" @function\n");
+                          //Write beginning of function section
+			  cas_proc_head($1.name, $1.name);
+			  cas_proc_head($1.name, ":\tnop\n");}
+			
 		;
 
 func_decl	: type IDENTIFIER LP RP LBR
@@ -131,6 +156,9 @@ decl_list	: type ident_list SC
 			     if(DEBUG) printf("Symbol %s updated with size %d, offset %d\n"
 						, s->name,s->size, s->offset);
 			 }
+			 //Pass up size and count
+			 $$.size = size; $$.val.ival = size*$2.count;
+			 $$.name = g_label;
 			 //Now all symbols are updated with size and offset
 			 ;}
 		| decl_list type ident_list SC
@@ -157,6 +185,10 @@ decl_list	: type ident_list SC
 			     if(DEBUG) printf("Symbol %s updated with size %d,offset %d\n"
 					,s->name, s->size, s->offset);
 			 }
+			 //Pass up size and count
+			 $$.size = (size >= $1.size ? size : $1.size); 
+			 $$.val.ival = size*$3.count + $1.val.ival;
+			 $$.name = $1.name;
 			;}
 			
 		;
