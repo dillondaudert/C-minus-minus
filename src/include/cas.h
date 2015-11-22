@@ -22,3 +22,4 @@ extern int cas_global(char *);
 extern int cas_proc_head(char *, char *);
 extern int cas_proc_decls(char *, char *);
 extern int cas_proc_body(char *, char *);
+extern int cas_proc_foot(char *, char *);

@@ -29,6 +29,8 @@ char *sec_proc_heads;
 char *sec_proc_decls;
 //Contains function bodies
 char *sec_proc_bods;
+//Contains function footers
+char *sec_proc_feet;
 
 /******************* Internal functions ***************************************/
 
@@ -66,6 +68,7 @@ int cas_close()
     free(sec_proc_heads);
     free(sec_proc_decls);
     free(sec_proc_bods);
+    free(sec_proc_feet);
     if( fclose(casout) == EOF ) return -1;
     return 0;
 }
@@ -94,8 +97,8 @@ int cas_prol()
 int cas_epil()
 {
     if(casout == NULL) return -1;
-    char *l1 = "\tleave\n\tret";
-    if( cas_write(l1) == -1) return -1;
+    //char *l1 = "\tleave\n\tret";
+    //if( cas_write(l1) == -1) return -1;
     return 0;
 }
 
@@ -162,6 +165,8 @@ int cas_writer(char *path)
     if(sec_proc_decls != NULL) cas_write(sec_proc_decls);
     //Process bodies
     if(sec_proc_bods != NULL) cas_write(sec_proc_bods);
+    //Process footers
+    if(sec_proc_feet != NULL) cas_write(sec_proc_feet);
     //Epilogue
     cas_epil();
     cas_write("\n");  
@@ -220,6 +225,7 @@ int cas_str_const(int num, char *strc)
         free(tmp);
         return 0;
     }
+    return 0;
 }
 
 int cas_global(char *globals)
@@ -241,6 +247,7 @@ int cas_global(char *globals)
         free(tmp);
         return 0;
     }
+    return 0;
 }
 
 int cas_proc_head(char *name, char *defin)
@@ -316,4 +323,30 @@ int cas_proc_body(char *name, char *body)
     //Free strings
     free(tmp);
     return 0;
+}
+
+int cas_proc_foot(char *name, char *foot)
+{
+    //Initialize the footer section if empty
+    if( sec_proc_feet == NULL ){
+        if( ( sec_proc_feet = calloc(8, sizeof(char)) ) == NULL ){
+            printf("Calloc error in caswriter.c:cas_proc_feet\n");
+            exit(0);
+        }
+        //Null terminate string at beginning
+        sec_proc_feet[0] = '\0';
+    }
+
+    //Allocate new string with space for appending
+    char *tmp = calloc(strlen(sec_proc_feet)+strlen(foot)+1, sizeof(char));
+    //Copy old statis + null termination
+    strncpy(tmp, sec_proc_feet, strlen(sec_proc_feet )+1);
+    //Concat new string
+    strcat(tmp,foot);
+    free(sec_proc_feet);
+    sec_proc_feet = strdup(tmp);
+    //Free strings
+    free(tmp);
+    return 0;
+    
 }

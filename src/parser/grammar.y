@@ -76,16 +76,18 @@ procs		: proc_decl procs
 proc_decl	: proc_head proc_body
 			{/* Write the function ending
 			  */
-			 cas_proc_body($1.name, "\t.size\t");
-			 cas_proc_body($1.name, $1.name);
-			 cas_proc_body($1.name, ", .-");
-			 cas_proc_body($1.name, $1.name);
-			 cas_proc_body($1.name, "\n");}
+			 if(strcmp($1.name, "main") == 0) cas_proc_body($1.name, "\tleave\n");
+			 cas_proc_body($1.name, "\tret\n");
+			 //Write function footer
+			 cas_proc_foot($1.name, "\t.size\t");
+			 cas_proc_foot($1.name, $1.name);
+			 cas_proc_foot($1.name, ", .-");
+			 cas_proc_foot($1.name, $1.name);
+			 cas_proc_foot($1.name, "\n");}
 		;
 
-proc_head	: func_decl 
-			{/* Send this function information to the appropriate
-			  * cas_ output files to be written later
+proc_head	: func_decl decl_list
+			{/* Write out function header and create new stack frame
 			  */
                           $$ = $1;
 			  cas_global("\t.globl ");
@@ -96,11 +98,18 @@ proc_head	: func_decl
 			  cas_global(" @function\n");
                           //Write beginning of function section
 			  cas_proc_head($1.name, $1.name);
-			  cas_proc_head($1.name, ":\tnop\n");}
-			decl_list
-			{;}
+			  cas_proc_head($1.name, ":\tnop\n");
+			  cas_proc_head($1.name, "\tpushq\t\%rbp\n");
+			  cas_proc_head($1.name, "\tmovq\t\%rsp, \%rbp\n");
+			  /* Allocate space for
+			   * the variable declarations in function
+			   */
+			  char *output = malloc(64*sizeof(char));
+			  snprintf(output, 64, "\tsubq\t$%d, %%rsp\n", $2.val.ival);
+			  cas_proc_head($1.name, output);
+			  free(output);}
 		| func_decl
-			{
+			{ /*Write out function header, new stack frame*/
                           $$ = $1;
 			  cas_global("\t.globl ");
 			  cas_global($1.name);
@@ -110,7 +119,9 @@ proc_head	: func_decl
 			  cas_global(" @function\n");
                           //Write beginning of function section
 			  cas_proc_head($1.name, $1.name);
-			  cas_proc_head($1.name, ":\tnop\n");}
+			  cas_proc_head($1.name, ":\tnop\n");
+			  cas_proc_head($1.name, "\tpushq\t\%rbp\n");
+			  cas_proc_head($1.name, "\tmovq\t\%rsp, \%rbp\n");}
 			
 		;
 
@@ -133,7 +144,7 @@ proc_body	: statement_list RBR
 
 decl_list	: type ident_list SC
 			{/*Here we have the size and the symbols in the table*
-			  * The symbols are listed in $2.hashes and there are
+			  * The symbols are listed in $2.names and there are
 			  * $2.count of them in the list */
 			 int size = $1.size;
 			 int i, offset = 0;
@@ -315,7 +326,16 @@ io_statement	: READ LP variable RP SC
 		| WRITE LP expr RP SC
                         {;}
 		| WRITE LP string_constant RP SC
-                        {;}
+                        {/* Write the print assembly to the process body
+			  *
+			  */
+			 cas_proc_body(NULL,"\tmovl\t$");
+			 cas_proc_body(NULL,$3.name);
+			 cas_proc_body(NULL,", \%ebx\n");
+			 cas_proc_body(NULL,"\tmovl\t\%ebx, \%esi\n");
+			 cas_proc_body(NULL,"\tmovl\t$0, \%eax\n");
+			 cas_proc_body(NULL,"\tmovl\t$.str_wformat, \%edi\n");
+			 cas_proc_body(NULL,"\tcall\tprintf\n");}
 		;
 
 return_statement: RETURN expr SC

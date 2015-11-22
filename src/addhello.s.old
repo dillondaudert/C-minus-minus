@@ -10,14 +10,6 @@
 	.type main @function
 
 main:	nop
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$.string_const0, %ebx
-	movl	%ebx, %esi
-	movl	$0, %eax
-	movl	$.str_wformat, %edi
-	call	printf
+	.size	main, .-main
 	leave
 	ret
-	.size	main, .-main
-
