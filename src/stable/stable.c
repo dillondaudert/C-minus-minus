@@ -36,7 +36,7 @@ unsigned long int st_hash_helper(int i, const char *str)
 /* st_create_symbol creates a symbol from the input parameters
  * A pointer to this symbol is returned
  */
-symb* st_create_symbol(char *name, char *addr, int offset, int type, int size, int arrsize)
+symb* st_create_symbol(char *name, char *addr, int offset, int d_type, int type, int size, int arrsize)
 {
     symb *new;
     
@@ -48,6 +48,7 @@ symb* st_create_symbol(char *name, char *addr, int offset, int type, int size, i
     new->name = name;
     new->addr = addr;
     new->offset = offset;
+    new->d_type = d_type;
     new->type = type;
     new->size = size;
     new->arrsize = arrsize;
@@ -60,18 +61,18 @@ symb* st_create_symbol(char *name, char *addr, int offset, int type, int size, i
  * it.
  * If an error occurs, return NULL.
  */
-symb* st_add_symbol(char *name, char *addr, int offset, int type, int size, int arrsize)
+symb* st_add_symbol(char *name, char *addr, int offset, int d_type, int type, int size, int arrsize)
 {
     //Find hash key for new struct
     unsigned long int hash = st_hash(name);    
     int key = hash % st_size;
     symb *new;
-    if(DEBUG) printf("Adding new symbol: %s, %s, offset: %d, type: %d, size: %d, arr: %d\n",
-                     name, addr, offset, type, size, arrsize);
+    if(DEBUG) printf("Adding new symbol: %s, %s, offset: %d, d_type: %d, type: %d, size: %d, arr: %d\n",
+                     name, addr, offset, d_type, type, size, arrsize);
     //Put symbol in stable hash map
     if( st_table[key].value == NULL ){ 
         //No collision, make new symbol
-        new = st_create_symbol(name, addr, offset, type, size, arrsize);
+        new = st_create_symbol(name, addr, offset, d_type, type, size, arrsize);
 
         st_table[key].value = new;
         if(DEBUG) printf("st_add added %s at position %d\n", name, key);
@@ -101,7 +102,7 @@ symb* st_add_symbol(char *name, char *addr, int offset, int type, int size, int 
             return NULL;
         }
         //Create new symbol to add
-        new = st_create_symbol(name, addr, offset, type, size, arrsize);
+        new = st_create_symbol(name, addr, offset, d_type, type, size, arrsize);
 
         //Add symbol to link
         new_l->value = new;

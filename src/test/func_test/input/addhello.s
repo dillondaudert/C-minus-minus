@@ -2,7 +2,7 @@
 .int_wformat: .string "%d\n"
 .str_wformat: .string "%s\n"
 .int_rformat: .string "%d"
-	.comm _gp, 32, 8
+	.comm _gp, 24, 4
 
 .string_const0: .string "Hello, world"
 

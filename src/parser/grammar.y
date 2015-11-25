@@ -130,7 +130,7 @@ func_decl	: type IDENTIFIER LP RP LBR
 			  * type(PROC), addr(LABEL), size (of retval)*/
 			 symb *s;
 			 char *addr = strdup($2.name);
-			 s = st_add_symbol($2.name, addr, 0, PROC,
+			 s = st_add_symbol($2.name, addr, 0, $1.d_type, PROC,
 					   $1.size, 0);
 			 if(DEBUG) printf("Added process %s to stable\n"
 			                  , s->name);
@@ -143,33 +143,33 @@ proc_body	: statement_list RBR
 		;
 
 decl_list	: type ident_list SC
-			{/*Here we have the size and the symbols in the table*
+			{/*Here we have the type and the symbols in the table*
 			  * The symbols are listed in $2.names and there are
 			  * $2.count of them in the list */
-			 int size = $1.size;
 			 int i, offset = 0;
 			 symb *s;
 			 for(i = 0; i < $2.count; i++){
 			     if(DEBUG) printf("updating symbol %s\n", $2.names[i]);
 			     s = st_get_symbol($2.names[i]);
-			     s->size = size;
+			     s->size = $1.size;
+			     s->d_type = $1.d_type;
 			     if(s->type == VAR){
 				 s->offset = offset;
-			         offset += size; 
+			         offset += $1.size; 
 			     }else if(s->type == ARR){
 			         s->offset = offset;
-				 offset += size*s->arrsize;
+				 offset += $1.size*s->arrsize;
 			     }else{
 				 yyerror("Not expecting type in decl_list\n");
 				 YYERROR;
 			     }
-			     if(DEBUG) printf("Symbol %s updated with size %d, offset %d\n"
-						, s->name,s->size, s->offset);
+			     if(DEBUG) printf("Symbol %s updated with type %d, offset %d\n"
+						, s->name,s->d_type, s->offset);
 			 }
 			 //Free the list of pointers (not the strings themselves)
 			 free($2.names);
 			 //Pass up size and count
-			 $$.size = size; $$.val.ival = size*$2.count;
+			 $$.size = $1.size; $$.val.ival = $1.size*$2.count;
 			 $$.name = g_label;
 			 //Pass up offset
 			 $$.count = offset;
@@ -181,32 +181,32 @@ decl_list	: type ident_list SC
 			  * $3.count of them in the list.
 			  * There are also declarations that come before these.
 			  *  */
-			 int size = $2.size;
 			 //The offset of these will be after previous declarations
 			 int i, offset = $1.count;
 			 symb *s;
 			 for(i = 0; i < $3.count; i++){
 			     if(DEBUG) printf("updating symbol %s\n", $3.names[i]);
 			     s = st_get_symbol($3.names[i]);
-			     s->size = size;
+			     s->size = $2.size;
+			     s->d_type = $2.d_type;
 			     if(s->type == VAR){
 				 s->offset = offset;
-			         offset += size; 
+			         offset += $2.size; 
 			     }else if(s->type == ARR){
 			         s->offset = offset;
-				 offset += size*s->arrsize;
+				 offset += $2.size*s->arrsize;
 			     }else{
 				 yyerror("Not expecting type in decl_list\n");
 				 YYERROR;
 			     }
-			     if(DEBUG) printf("Symbol %s updated with size %d,offset %d\n"
-					,s->name, s->size, s->offset);
+			     if(DEBUG) printf("Symbol %s updated with type %d,offset %d\n"
+					,s->name, s->d_type, s->offset);
 			 }
 			 //Free the list of pointers (not the strings themselves)
 			 free($3.names);
 			 //Pass up size and count
-			 $$.size = (size >= $1.size ? size : $1.size); 
-			 $$.val.ival = size*$3.count + $1.val.ival;
+			 $$.size = ($2.size >= $1.size ? $2.size : $1.size); 
+			 $$.val.ival = $2.size*$3.count + $1.val.ival;
 			 $$.name = $1.name;
 			;}
 			
@@ -224,7 +224,7 @@ ident_list	: var_decl
 			 if(DEBUG) printf("Added %s to $$names, count=%d\n", 
 					  $$.names[0], $$.count);
 			 //Add symbol without size into table
-			 st_add_symbol($$.names[0], strdup(g_label), 0, $1.type,
+			 st_add_symbol($$.names[0], strdup(g_label), 0, 0, $1.type,
 				       0, arrsize);
 			 }
 		| ident_list CM var_decl
@@ -246,7 +246,7 @@ ident_list	: var_decl
 			 //New symbol has size 0, offset will be size*count
 			 // * arrsize if it isn't 0.
 			 st_add_symbol($$.names[newcount-1], strdup(g_label)
-                                       , $1.count, $3.type, 0, arrsize);
+                                       , $1.count, 0, $3.type, 0, arrsize);
 			 free($1.names);
 			 }
 			
@@ -264,9 +264,11 @@ var_decl	: IDENTIFIER
 		;
 
 type		: INT
-			{$$.size = 4;}
+			{$$.size = 4;
+			 $$.d_type = INT_T;}
 		| FLOAT 
-			{$$.size = 8;}
+			{$$.size = 4;
+			 $$.d_type = FLOAT_T;}
 		;
 
 statement_list	: statement
@@ -427,7 +429,7 @@ string_constant	: STRING
                         {char *name = $1.name;
 			 char *addr = strdup(name);
 			 //Add string constant to symbol table
-			 st_add_symbol(name, addr, 0, VAR, $1.size, 0);
+			 st_add_symbol(name, addr, 0, 0, VAR, $1.size, 0);
 			 //Write string constant to proper assembly section
 			 cas_str_const(0, name);
 			 cas_str_const(0, ": .string \"");

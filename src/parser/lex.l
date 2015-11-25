@@ -15,8 +15,6 @@ int str_index;
 int strcount = 0;
 %}
 
-/* Options to suppress unused functions */
-
 %x COMMENT
 %x STRSTATE
 %x STR2STATE
@@ -28,8 +26,8 @@ int strcount = 0;
 (?:exit)		{return EXIT;}
 (?:float)		{return FLOAT;}
 (?:if)			{return IF;}
-(?:int)			{yylval.size = 4; return INT;}
-(?:read)		{yylval.size = 8; return READ;}
+(?:int)			{return INT;}
+(?:read)		{return READ;}
 (?:return)		{return RETURN;}
 (?:while)		{return WHILE;}
 (?:write)		{return WRITE;}

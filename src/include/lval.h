@@ -5,6 +5,7 @@
 struct lval{
     char *name;
     int count;
+    int d_type;
     int type; //VAR, ARR or PROC
     int size; //type size 4/8
     int arrsize; //size of array

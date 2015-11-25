@@ -36,9 +36,9 @@ int main(int argv, char **argc)
     sprintf(n3, "S3");
     sprintf(a3, "gp_");
 
-    s1 = st_add_symbol(n1, a1, 4, VAR, 4);
-    s2 = st_add_symbol(n2, a2, 4, VAR, 4);
-    s3 = st_add_symbol(n3, a3, 4, VAR, 4);
+    s1 = st_add_symbol(n1, a1, 0, INT_T, VAR, 4, 0);
+    s2 = st_add_symbol(n2, a2, 4, INT_T, VAR, 4, 0);
+    s3 = st_add_symbol(n3, a3, 8, INT_T, VAR, 4, 0);
 
     s4 = st_get_symbol("zz");
     printf("s1 name: %s, addr: %s\n", s4->name, s4->addr);
