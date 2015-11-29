@@ -84,10 +84,14 @@ int cas_prol()
     char *l2 = ".int_wformat: .string \"\%d\\n\"";
     char *l3 = ".str_wformat: .string \"\%s\\n\"";
     char *l4 = ".int_rformat: .string \"\%d\"";
+    char *l5 = ".flt_wformat: .string \"\%f\\n\"";
+    char *l6 = ".flt_rformat: .string \"\%f\"";
     if( cas_writeln(l1) == -1) return -1;
     if( cas_writeln(l2) == -1) return -1;
     if( cas_writeln(l3) == -1) return -1;
     if( cas_writeln(l4) == -1) return -1;
+    if( cas_writeln(l5) == -1) return -1;
+    if( cas_writeln(l6) == -1) return -1;
     return 0; 
 }
 

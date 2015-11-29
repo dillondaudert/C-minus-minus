@@ -134,7 +134,8 @@ func_decl	: type IDENTIFIER LP RP LBR
 					   $1.size, 0);
 			 if(DEBUG) printf("Added process %s to stable\n"
 			                  , s->name);
-			 $$.name = $2.name;}
+			 $$.name = $2.name;
+			 g_label = "rbp";}
 			 
 		;
 
@@ -169,7 +170,8 @@ decl_list	: type ident_list SC
 			 //Free the list of pointers (not the strings themselves)
 			 free($2.names);
 			 //Pass up size and count
-			 $$.size = $1.size; $$.val.ival = $1.size*$2.count;
+			 $$.size = $1.size; 
+			 $$.val.ival = $1.size*$2.count;
 			 $$.name = g_label;
 			 //Pass up offset
 			 $$.count = offset;
@@ -247,6 +249,7 @@ ident_list	: var_decl
 			 // * arrsize if it isn't 0.
 			 st_add_symbol($$.names[newcount-1], strdup(g_label)
                                        , $1.count, 0, $3.type, 0, arrsize);
+			 //Free old list
 			 free($1.names);
 			 }
 			
@@ -326,7 +329,32 @@ while_expr	: LP expr RP
 io_statement	: READ LP variable RP SC
                         {;}
 		| WRITE LP expr RP SC
-                        {;}
+                        {/*If expr is variable, its value will be in the register
+			   that is named in lval.val.sval!*/
+			 if($3.name == NULL){
+			     //Print the constant that was evaluated
+			     if($3.d_type == INT_T){
+			         //Create string to move value into source register
+			         char *out = malloc(64 * sizeof(char));
+			         snprintf(out,64,"\tmovl\t$%d, %%esi\n",$3.val.ival);
+			         cas_proc_body(NULL,out);
+			         cas_proc_body(NULL,"\tmovl\t$0, \%eax\n");
+			         cas_proc_body(NULL,"\tmovl\t$.int_wformat, \%edi\n");
+			         cas_proc_body(NULL,"\tcall\tprintf\n");
+			         free(out); 
+			     }else{
+				 //Put the # of fp args passed to printf in %eax
+				 //movss (32bit FP) their vals into xmm0, xmm1, etc
+			         char *out = malloc(64 * sizeof(char));
+			         snprintf(out,64,"\tmovss\t$%f, %%xmm0\n",$3.val.fval);
+			         cas_proc_body(NULL,out);
+			         cas_proc_body(NULL,"\tmovl\t$1, \%eax\n");
+			         cas_proc_body(NULL,"\tmovl\t$.flt_wformat, \%edi\n");
+			         cas_proc_body(NULL,"\tcall\tprintf\n");
+			         free(out); 
+			     }
+			 }
+			}
 		| WRITE LP string_constant RP SC
                         {/* Write the print assembly to the process body
 			  *
@@ -353,75 +381,106 @@ compound_statement: LBR statement_list RBR
 		;
 
 expr		: expr AND simple_expr
-                        {;}
+                        {$$ = $1;}
 		| expr OR simple_expr
-                        {;}
+                        {$$ = $1;}
 		| simple_expr
-                        {;}
+                        {$$ = $1;}
 		| NOT simple_expr
-                        {;}
+                        {$$ = $1;}
 		;
 
 simple_expr	: simple_expr EQ add_expr
-                        {;}
+                        {$$ = $1;}
 		| simple_expr NE add_expr
-                        {;}
+                        {$$ = $1;}
 		| simple_expr LE add_expr
-                        {;}
+                        {$$ = $1;}
 		| simple_expr LT add_expr
-                        {;}
+                        {$$ = $1;}
 
 		| simple_expr GE add_expr
-                        {;}
+                        {$$ = $1;}
 
 		| simple_expr GT add_expr
-                        {;}
+                        {$$ = $1;}
 
 		| add_expr
-                        {;}
+                        {$$ = $1;}
 
 		;
 
 add_expr	: add_expr PLUS mul_expr
-                        {;}
+                        {$$ = $1;}
 
 		| add_expr MINUS mul_expr
-                        {;}
+                        {$$ = $1;}
 
 		| mul_expr
-                        {;}
+                        {$$ = $1;}
 
 		;
 
 mul_expr	: mul_expr TIMES factor
-                        {;}
+                        {/*Three different modes depending on input types*/
+			 if($1.name != NULL && $3.name != NULL){
+			 //Both inputs are variables
+			     if(DEBUG) printf("var * var test!!\n");
+
+			 }else if($1.name !=NULL && $3.name == NULL){
+			     //Left operand is a variable
+			     //symb *var = st_get_symbol($1.name);
+			     
+			     
+			 }else if($1.name == NULL && $3.name != NULL){
+			     //Right operand is a variable
+			     //symb *var = st_get_symbol($3.name);
+			 }else{
+			 //Both inputs are constants
+			     /*Check for float vs int here ...*/
+			     if($1.d_type == INT_T && $3.d_type == INT_T){
+			         $$.d_type = INT_T;
+			         $$.val.ival = $1.val.ival * $3.val.ival;
+			     }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
+			         $$.d_type = FLOAT_T;
+			         $$.val.fval = $1.val.fval * $3.val.ival;
+			     }else if($1.d_type == INT_T && $3.d_type == FLOAT_T){
+			         $$.d_type = FLOAT_T;
+			         $$.val.fval = $1.val.ival * $3.val.fval;
+			     }else{
+			         $$.d_type = FLOAT_T;
+			         $$.val.fval = $1.val.fval * $3.val.fval;
+			         if(DEBUG) printf("FLOAT * FLOAT = %f\n", $$.val.fval);
+			     } //Pass up type and result
+			 }}
 
 		| mul_expr DIVIDE factor
                         {;}
 
 		| factor
-                        {;}
+                        {$$ = $1;}
 		;
 
 factor		: variable
-                        {;}
+                        {$$ = $1;}
 
 		| constant
-                        {;}
+                        {$$ = $1;}
 
 		| IDENTIFIER LP RP
-                        {;}
+                        {/*Function call*/
+			 $$ = $1;}
 
 		| LP expr RP
-                        {;}
+                        {/*Pass up result of expr*/;}
 
 		;
 
-variable	: IDENTIFIER
-                        {;}
+variable	: IDENTIFIER  
+			{$$.name = $1.name;}
 
 		| IDENTIFIER LBK expr RBK
-                        {;}
+                        {/*Pass up name of array and result of expr*/}
 
 		;
 
@@ -442,10 +501,23 @@ string_constant	: STRING
 		;
 
 constant	: INTCON
-                        {;}
+                        {$$.name = NULL;
+			 $$.d_type = INT_T;
+			 $$.val.ival = $1.val.ival;
+			 if(DEBUG) printf("Int constant %d\n", $1.val.ival);}
 
 		| FLOATCON
-                        {;}
+                        {$$.name = NULL;
+			 $$.d_type = FLOAT_T;
+			 $$.val.sval = $1.name; //Label
+			 cas_str_const(0, $1.name);
+			 cas_str_const(0, ":\n\t.long\t");
+			 char *intout = malloc(32 * sizeof(char));
+			 snprintf(intout, 32, "%a", $1.val.fval);
+			 cas_str_const(0, intout);
+			 cas_str_const(0, "\n\t.align 4\n");
+			 free(intout);
+			 if(DEBUG) printf("Float constant %f\n", $1.val.fval);}
 
 		; 
 

@@ -13,6 +13,7 @@ char *string;
 int MAX_STRING = 512;
 int str_index;
 int strcount = 0;
+int fltcount = 0;
 %}
 
 %x COMMENT
@@ -68,7 +69,12 @@ int strcount = 0;
 
 {L}{A}*			{yylval.name = strdup(yytext); return IDENTIFIER;}
 "0"|{NZ}{D}*		{yylval.val.ival = atoi(yytext); return INTCON;}
-{D}*"."{D}+{E}?		{yylval.val.dval = atof(yytext); return FLOATCON;}
+{D}*"."{D}+{E}?		{yylval.val.fval = atof(yytext); 
+			 char *name = malloc(32*sizeof(char));
+			 snprintf(name, 32, ".LC%d", fltcount++);
+			 yylval.name = strdup(name);
+			 free(name);
+			 return FLOATCON;}
 
 \'			{BEGIN(STR2STATE);
 			 MAX_STRING = 512;
