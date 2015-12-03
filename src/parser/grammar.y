@@ -8,6 +8,7 @@
 #include "stable.h"
 #include "cas.h"
 #include "lval.h"
+#include "reg.h"
 void yyerror(const char *);
 int yylex(void);
 
@@ -297,7 +298,25 @@ statement	: assignment
 		;
 
 assignment	: variable ASSIGN expr SC
-                        {;}
+            {//Var reg $1.val.ival, value reg $3.val.ival
+             //Check that variable and expr are same type...
+             if( $1.d_type != $3.d_type ){
+                if(DEBUG) printf("Tried to assign missmatching type to variable!\n");
+                YYERROR;
+             }
+             char *buf = calloc(64, sizeof(char));
+             char *r1Name, *r2Name;
+             r1Name = reg_getName64($1.val.ival);
+             r2Name = reg_getName32($3.val.ival);
+             //movl %r1-32, (%r2-64) ; move value into the location dereferenced by r2
+             snprintf(buf, 64, "\tmovl\t%%%s, (%%%s)\n", r2Name, r1Name);
+             cas_proc_body(NULL, buf);
+             free(buf);
+             //Release both registers
+             reg_release($1.val.ival);
+             reg_release($3.val.ival);
+             if(DEBUG) printf("Assigned value from reg %s into %s\n", r2Name, r1Name);
+            }
 		;
 
 if_statement	: IF test_then ELSE compound_statement
@@ -329,34 +348,33 @@ while_expr	: LP expr RP
 io_statement	: READ LP variable RP SC
                         {;}
 		| WRITE LP expr RP SC
-                        {/*If expr is variable, its value will be in the register
-			   that is named in lval.val.sval!*/
-			 if($3.name == NULL){
-			     //Print the constant that was evaluated
-			     if($3.d_type == INT_T){
-			         //Create string to move value into source register
-			         char *out = malloc(64 * sizeof(char));
-			         snprintf(out,64,"\tmovl\t$%d, %%esi\n",$3.val.ival);
-			         cas_proc_body(NULL,out);
-			         cas_proc_body(NULL,"\tmovl\t$0, \%eax\n");
-			         cas_proc_body(NULL,"\tmovl\t$.int_wformat, \%edi\n");
-			         cas_proc_body(NULL,"\tcall\tprintf\n");
-			         free(out); 
-			     }else{
+            {//Value stored in $3.ival register, print by type
+			 char *buf = calloc(64, sizeof(char));
+             char *rName = reg_getName32($3.val.ival); 
+			 //Print the constant that was evaluated
+			 if($3.d_type == INT_T){
+			     //Create string to move value into source register
+			     snprintf(buf,64,"\tmovl\t%%%s, %%esi\n",rName);
+			     cas_proc_body(NULL,buf);
+			     cas_proc_body(NULL,"\tmovl\t$0, \%eax\n");
+			     cas_proc_body(NULL,"\tmovl\t$.int_wformat, \%edi\n");
+			     cas_proc_body(NULL,"\tcall\tprintf\n"); 
+                 
+			 }else{
 				 //Put the # of fp args passed to printf in %eax
 				 //movss (32bit FP) their vals into xmm0, xmm1, etc
-			         char *out = malloc(64 * sizeof(char));
-			         snprintf(out,64,"\tmovss\t$%f, %%xmm0\n",$3.val.fval);
-			         cas_proc_body(NULL,out);
-			         cas_proc_body(NULL,"\tmovl\t$1, \%eax\n");
-			         cas_proc_body(NULL,"\tmovl\t$.flt_wformat, \%edi\n");
-			         cas_proc_body(NULL,"\tcall\tprintf\n");
-			         free(out); 
-			     }
+			     snprintf(buf,64,"\tmovss\t%%%s, %%xmm0\n",rName);
+			     cas_proc_body(NULL,buf);
+			     cas_proc_body(NULL,"\tmovl\t$1, \%eax\n");
+			     cas_proc_body(NULL,"\tmovl\t$.flt_wformat, \%edi\n");
+			     cas_proc_body(NULL,"\tcall\tprintf\n");
 			 }
+            free(buf);
+            reg_release($3.val.ival);
+			 
 			}
 		| WRITE LP string_constant RP SC
-                        {/* Write the print assembly to the process body
+            {/* Write the print assembly to the process body
 			  *
 			  */
 			 cas_proc_body(NULL,"\tmovl\t$");
@@ -380,7 +398,7 @@ compound_statement: LBR statement_list RBR
                         {;}
 		;
 
-expr		: expr AND simple_expr
+expr	: expr AND simple_expr
                         {$$ = $1;}
 		| expr OR simple_expr
                         {$$ = $1;}
@@ -411,65 +429,155 @@ simple_expr	: simple_expr EQ add_expr
 		;
 
 add_expr	: add_expr PLUS mul_expr
-                        {$$ = $1;}
+            {/*Register in lval.val.ival, data type in attr.d_type */
+			 char *buf = calloc(64, sizeof(char));
+             char *r1Name, *r2Name;
+             int d_type;
+             /*Check for float vs int here */
+			 if($1.d_type == INT_T && $3.d_type == INT_T){
+                //Integer addition, attr.reg * attr2.reg, pass up right
+                d_type = INT_T;
+                r1Name = reg_getName32($1.val.ival);
+                r2Name = reg_getName32($3.val.ival);
+                snprintf(buf, 64, "\taddl\t%%%s, %%%s\n", r1Name, r2Name);
+                cas_proc_body(NULL, buf);
+                
+			 }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
+
+			 }else if($1.d_type == INT_T && $3.d_type == FLOAT_T){
+
+			 }else{
+
+			     if(DEBUG) printf("FLOAT - FLOAT = %f\n", $$.val.fval);
+			 } //Pass up type and result
+             free(buf);
+             reg_release($1.val.ival);                
+             $$.val.ival = $3.val.ival; 
+             $$.d_type = d_type;
+			 }
+            
+            
 
 		| add_expr MINUS mul_expr
-                        {$$ = $1;}
+            {/*Register in lval.val.ival, data type in attr.d_type */
+			 
+			 char *buf = calloc(64, sizeof(char));
+             char *r1Name, *r2Name;
+             int d_type;
+             /*Check for float vs int here */
+			 if($1.d_type == INT_T && $3.d_type == INT_T){
+                //Integer subtraction, attr.reg * attr2.reg, pass up right
+                d_type = INT_T;
+                r1Name = reg_getName32($1.val.ival);
+                r2Name = reg_getName32($3.val.ival);
+                snprintf(buf, 64, "\tsubl\t%%%s, %%%s\n", r1Name, r2Name);
+                cas_proc_body(NULL, buf);
+                
+			 }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
+
+			 }else if($1.d_type == INT_T && $3.d_type == FLOAT_T){
+
+			 }else{
+
+			     if(DEBUG) printf("FLOAT - FLOAT = %f\n", $$.val.fval);
+			 } //Pass up type and result
+             free(buf);
+             reg_release($1.val.ival);                
+             $$.val.ival = $3.val.ival; 
+             $$.d_type = d_type;
+            }
+			     
 
 		| mul_expr
-                        {$$ = $1;}
+            {$$ = $1;}
 
 		;
 
-mul_expr	: mul_expr TIMES factor
-                        {/*Three different modes depending on input types*/
-			 if($1.name != NULL && $3.name != NULL){
-			 //Both inputs are variables
-			     if(DEBUG) printf("var * var test!!\n");
+mul_expr    : mul_expr TIMES factor
+            {/*Register in lval.val.ival, data type in attr.d_type */
+			 char *buf = calloc(64, sizeof(char));
+             char *r1Name, *r2Name;
+             int d_type;
+             /*Check for float vs int here */
+			 if($1.d_type == INT_T && $3.d_type == INT_T){
+                //Integer multiplication, attr.reg * attr2.reg, pass up right
+                d_type = INT_T;
+                r1Name = reg_getName32($1.val.ival);
+                r2Name = reg_getName32($3.val.ival);
+                snprintf(buf, 64, "\timull\t%%%s, %%%s\n", r1Name, r2Name);
+                cas_proc_body(NULL, buf);
+                
+			 }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
 
-			 }else if($1.name !=NULL && $3.name == NULL){
-			     //Left operand is a variable
-			     //symb *var = st_get_symbol($1.name);
-			     
-			     
-			 }else if($1.name == NULL && $3.name != NULL){
-			     //Right operand is a variable
-			     //symb *var = st_get_symbol($3.name);
+			 }else if($1.d_type == INT_T && $3.d_type == FLOAT_T){
+
 			 }else{
-			 //Both inputs are constants
-			     /*Check for float vs int here ...*/
-			     if($1.d_type == INT_T && $3.d_type == INT_T){
-			         $$.d_type = INT_T;
-			         $$.val.ival = $1.val.ival * $3.val.ival;
-			     }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
-			         $$.d_type = FLOAT_T;
-			         $$.val.fval = $1.val.fval * $3.val.ival;
-			     }else if($1.d_type == INT_T && $3.d_type == FLOAT_T){
-			         $$.d_type = FLOAT_T;
-			         $$.val.fval = $1.val.ival * $3.val.fval;
-			     }else{
-			         $$.d_type = FLOAT_T;
-			         $$.val.fval = $1.val.fval * $3.val.fval;
-			         if(DEBUG) printf("FLOAT * FLOAT = %f\n", $$.val.fval);
-			     } //Pass up type and result
-			 }}
+
+			     if(DEBUG) printf("FLOAT * FLOAT = %f\n", $$.val.fval);
+			 } //Pass up type and result
+             free(buf);
+             reg_release($1.val.ival);                
+             $$.val.ival = $3.val.ival; 
+             $$.d_type = d_type;
+			 }
+            
 
 		| mul_expr DIVIDE factor
-                        {;}
+            {/*Register in lval.val.ival, data type in attr.d_type */
+			 char *buf = calloc(64, sizeof(char));
+             char *r1Name, *r2Name;
+             int d_type;
+             /*Check for float vs int here */
+			 if($1.d_type == INT_T && $3.d_type == INT_T){
+                //Integer division, attr.reg * attr2.reg, pass up right
+                d_type = INT_T;
+                r1Name = reg_getName32($1.val.ival);
+                r2Name = reg_getName32($3.val.ival);
+                snprintf(buf, 64, "\timull\t%%%s, %%%s\n", r1Name, r2Name);
+                cas_proc_body(NULL, buf);
+                
+			 }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
+
+			 }else if($1.d_type == INT_T && $3.d_type == FLOAT_T){
+
+			 }else{
+
+			     if(DEBUG) printf("FLOAT * FLOAT = %f\n", $$.val.fval);
+			 } //Pass up type and result
+             free(buf);
+             $$.val.ival = $3.val.ival; 
+             reg_release($1.val.ival);                
+             $$.d_type = d_type;
+			 }
+            
+                        
 
 		| factor
                         {$$ = $1;}
 		;
 
-factor		: variable
-                        {$$ = $1;}
+factor	: variable
+                        {//Send up variable values to expressions
+                         int reg = reg_get();
+                         char *rName = reg_getName32(reg);
+                         char *rAddrName = reg_getName64($1.val.ival);
+                         char *buf = calloc(64, sizeof(char));
+                         //Output assembly to dereference
+                         snprintf(buf, 64, "\tmovl\t(%%%s), %%%s\n",rAddrName, rName);
+                         cas_proc_body(NULL, buf);
+                         free(buf);
+                         //Release prev address register
+                         reg_release($1.val.ival);
+                         $$.val.ival = reg;
+                         $$.d_type = $1.d_type;
+                        }
 
 		| constant
                         {$$ = $1;}
 
 		| IDENTIFIER LP RP
                         {/*Function call*/
-			 $$ = $1;}
+            			 $$ = $1;}
 
 		| LP expr RP
                         {/*Pass up result of expr*/;}
@@ -477,7 +585,40 @@ factor		: variable
 		;
 
 variable	: IDENTIFIER  
-			{$$.name = $1.name;}
+			{//Get var from symbol table, load its address
+			 //Into a register, pass up
+			 symb *var = st_get_symbol($1.name);
+			 if(var == NULL) YYERROR;
+			 //Get register to store variable
+			 int reg = reg_get();
+			 char *rName = reg_getName64(reg);
+			 char *buf = calloc(64, sizeof(char));
+			 if( strcmp(var->addr, "_gp") == 0 ){
+			     snprintf(buf, 64, "\tmovq\t$_gp, %%%s\n",rName);
+			     //Move addr of global into register
+			     cas_proc_body(NULL, buf);
+			     //Incr by offset
+			     snprintf(buf, 64, "\taddq\t$%d, %%%s\n",var->offset,rName);
+			     cas_proc_body(NULL, buf);
+
+			 }else if( strcmp(var->addr, "rbp") == 0 ){
+			     snprintf(buf, 64, "\tmovq\t%%rbp, %%%s\n",rName);
+			     //Move addr of local var into register
+			     cas_proc_body(NULL, buf);
+			     //Incr by offset (negative)
+			     snprintf(buf, 64, "\tsubq\t$%d, %%%s\n",var->offset,rName);
+			     cas_proc_body(NULL, buf);
+
+			 }else{
+			     if(DEBUG) printf("Variable's address invalid: %s\n", var->addr);
+			     YYERROR;
+			 }
+			 free(buf);
+			 //Pass up register location and type
+			 $$.val.ival = reg;
+			 $$.d_type = var->d_type;
+             $$.type = VAR;
+			}
 
 		| IDENTIFIER LBK expr RBK
                         {/*Pass up name of array and result of expr*/}
@@ -485,7 +626,7 @@ variable	: IDENTIFIER
 		;
 
 string_constant	: STRING
-                        {char *name = $1.name;
+            {char *name = $1.name;
 			 char *addr = strdup(name);
 			 //Add string constant to symbol table
 			 st_add_symbol(name, addr, 0, 0, VAR, $1.size, 0);
@@ -496,28 +637,46 @@ string_constant	: STRING
 			 cas_str_const(0, "\"\n");
 			 //Pass up reference 
 			 $$.name = name;
-			 }
+             $$.type = -1;
+			}
 
 		;
 
-constant	: INTCON
-                        {$$.name = NULL;
+constant    : INTCON
+            {//Put constant into register, pass reg val up
+			 int reg = reg_get();
+			 char *rName = reg_getName32(reg);
+			 char *buf = calloc(64, sizeof(char));
+			 //Build assembly string
+			 snprintf(buf, 64, "\tmovl\t$%d, %%%s\n", $1.val.ival, rName);
+			 //Write to output
+			 cas_proc_body(NULL, buf);
+			 //Pass up register reference and data type
+			 $$.val.ival = reg;
 			 $$.d_type = INT_T;
-			 $$.val.ival = $1.val.ival;
-			 if(DEBUG) printf("Int constant %d\n", $1.val.ival);}
+             //Type is a constant
+             $$.type = -1;
+			 free(buf);
+             if(DEBUG) printf("Putting int %d into reg %s\n", $1.val.ival, rName);
+			}
 
-		| FLOATCON
-                        {$$.name = NULL;
+        | FLOATCON
+			{//Put float constant into register
+			 int reg = reg_get();
+			 char *rName = reg_getName64(reg);
+			 char *buf = calloc(64, sizeof(char));
+			 //Build assembly string
+			 snprintf(buf, 64, "\tmovl\t$%f, %%%s\n", $1.val.fval, rName);
+			 //Write to output
+			 cas_proc_body(NULL, buf);
+			 //Pass up register reference and data type
+			 $$.val.ival = reg;
 			 $$.d_type = FLOAT_T;
-			 $$.val.sval = $1.name; //Label
-			 cas_str_const(0, $1.name);
-			 cas_str_const(0, ":\n\t.long\t");
-			 char *intout = malloc(32 * sizeof(char));
-			 snprintf(intout, 32, "%a", $1.val.fval);
-			 cas_str_const(0, intout);
-			 cas_str_const(0, "\n\t.align 4\n");
-			 free(intout);
-			 if(DEBUG) printf("Float constant %f\n", $1.val.fval);}
+             //Type is a constant
+             $$.type = -1;
+			 free(buf);
+             if(DEBUG) printf("Putting float %f into reg %s\n", $1.val.fval, rName);
+			}
 
 		; 
 

@@ -6,7 +6,7 @@ LDFLAGS = -O3 -flto
 INC = -I../include
 casdir = ../assembly
 stdir = ../stable
-sources = grammar.tab.c lex.yy.c parser.c $(casdir)/caswriter.c $(stdir)/stable.c
+sources = grammar.tab.c lex.yy.c parser.c $(casdir)/caswriter.c $(stdir)/stable.c $(casdir)/regs.c
 
 all: parser
 

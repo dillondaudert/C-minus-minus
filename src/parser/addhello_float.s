@@ -7,9 +7,6 @@
 	.comm _gp, 16, 4
 
 .string_const0: .string "Hello, world"
-.LC0:
-	.long	0x1.99999ap+1
-	.align 4
 
 	.globl main
 	.type main @function
@@ -22,14 +19,46 @@ main:	nop
 	movl	%ebx, %esi
 	movl	$0, %eax
 	movl	$.str_wformat, %edi
-	call	printf
-	movl	$10, %esi
+	call	printf              
+	movl	$10, %eax
+	movl	$20, %ebx
+	addl	%eax, %ebx
+	movl	%ebx, %esi
 	movl	$0, %eax
 	movl	$.int_wformat, %edi
 	call	printf
-	movss	$0.000000, %xmm0
-	movl	$1, %eax
-	movl	$.flt_wformat, %edi
+	movq	$_gp, %rax
+	addq	$0, %rax
+	movl	$1, %ebx
+	movl	%ebx, (%rax)
+	movq	$_gp, %rax
+	addq	$8, %rax
+	movl	$3, %ebx
+	movl	%ebx, (%rax)
+	movq	$_gp, %rax
+	addq	$12, %rax
+	movl	$4, %ebx
+	movl	%ebx, (%rax)
+	movq	$_gp, %rax
+	addq	$4, %rax
+	movq	$_gp, %rbx
+	addq	$0, %rbx
+	movl	(%rbx), %ecx
+	movq	$_gp, %rbx
+	addq	$8, %rbx
+	movl	(%rbx), %edx
+	addl	%ecx, %edx
+	movq	$_gp, %rbx
+	addq	$12, %rbx
+	movl	(%rbx), %ecx
+	addl	%edx, %ecx
+	movl	%ecx, (%rax)
+	movq	$_gp, %rax
+	addq	$4, %rax
+	movl	(%rax), %ebx
+	movl	%ebx, %esi
+	movl	$0, %eax
+	movl	$.int_wformat, %edi
 	call	printf
 	leave
 	ret
