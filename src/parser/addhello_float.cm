@@ -1,15 +1,14 @@
-int i, j, k, l;
+int i, j, k;
 
 int main () {
 
 	float x;
 	int a;
-	
-	write('Hello, world');
-	write(10+20);
-	i=1;  k=3; l=4;
-	j = i + k + l;
-	write(j);
+    a = 6;
+	i=3; j=4;
+	k = i + j;
+	write(k);
+    write(a);
 	exit; 
 
 }
