@@ -377,13 +377,20 @@ io_statement	: READ LP variable RP SC
             {/* Write the print assembly to the process body
 			  *
 			  */
-			 cas_proc_body(NULL,"\tmovl\t$");
-			 cas_proc_body(NULL,$3.name);
-			 cas_proc_body(NULL,", \%ebx\n");
-			 cas_proc_body(NULL,"\tmovl\t\%ebx, \%esi\n");
+             int reg = reg_get();
+             char *rName = reg_getName32(reg);
+             char *buf = calloc(64, sizeof(char));
+             //Move string literal into register
+             snprintf(buf, 64, "\tmovl\t$%s, %%%s\n", $3.name, rName);
+             cas_proc_body(NULL, buf);
+             //Pass literal to printf
+             snprintf(buf, 64, "\tmovl\t%%%s, %%esi\n", rName);
+			 cas_proc_body(NULL, buf);
 			 cas_proc_body(NULL,"\tmovl\t$0, \%eax\n");
 			 cas_proc_body(NULL,"\tmovl\t$.str_wformat, \%edi\n");
-			 cas_proc_body(NULL,"\tcall\tprintf\n");}
+			 cas_proc_body(NULL,"\tcall\tprintf\n");
+             reg_release(reg);
+             free(buf);}
 		;
 
 return_statement: RETURN expr SC
@@ -409,19 +416,151 @@ expr	: expr AND simple_expr
 		;
 
 simple_expr	: simple_expr EQ add_expr
-                        {$$ = $1;}
+            {/*Logical equals*/
+            char *r1Name, *r2Name, *buf;
+            r1Name = reg_getName32($1.val.ival);
+            r2Name = reg_getName32($3.val.ival);
+            //Compare the two registers
+            buf = calloc(64, sizeof(char));
+            snprintf(buf, 64, "\tcmpl\t%%%s, %%%s\n", r2Name, r1Name);
+            //Write to assembly
+            cas_proc_body(NULL, buf);
+            //Flags are now set, move vals
+            snprintf(buf, 64, "\tmovl\t$0, %%%s\n", r1Name);
+            cas_proc_body(NULL, buf);
+            snprintf(buf, 64, "\tmovl\t$1, %%%s\n", r2Name);
+            cas_proc_body(NULL, buf);
+            //Do conditional move
+            snprintf(buf, 64, "\tcmove\t%%%s, %%%s\n", r2Name, r1Name);
+            cas_proc_body(NULL, buf);
+            //The truth value is now in $1's register, pass up, free resources
+            $$.val.ival = $1.val.ival;
+            $$.d_type = INT_T;
+            free(buf);
+            reg_release($3.val.ival);
+            }
 		| simple_expr NE add_expr
-                        {$$ = $1;}
+            {/*Logical not equals*/
+            char *r1Name, *r2Name, *buf;
+            r1Name = reg_getName32($1.val.ival);
+            r2Name = reg_getName32($3.val.ival);
+            //Compare the two registers
+            buf = calloc(64, sizeof(char));
+            snprintf(buf, 64, "\tcmpl\t%%%s, %%%s\n", r2Name, r1Name);
+            //Write to assembly
+            cas_proc_body(NULL, buf);
+            //Flags are now set, move vals
+            snprintf(buf, 64, "\tmovl\t$0, %%%s\n", r1Name);
+            cas_proc_body(NULL, buf);
+            snprintf(buf, 64, "\tmovl\t$1, %%%s\n", r2Name);
+            cas_proc_body(NULL, buf);
+            //Do conditional move
+            snprintf(buf, 64, "\tcmovne\t%%%s, %%%s\n", r2Name, r1Name);
+            cas_proc_body(NULL, buf);
+            //The truth value is now in $1's register, pass up, free resources
+            $$.val.ival = $1.val.ival;
+            $$.d_type = INT_T;
+            free(buf);
+            reg_release($3.val.ival);
+            }
 		| simple_expr LE add_expr
-                        {$$ = $1;}
+            {/*Logical less than or equals*/
+            char *r1Name, *r2Name, *buf;
+            r1Name = reg_getName32($1.val.ival);
+            r2Name = reg_getName32($3.val.ival);
+            //Compare the two registers
+            buf = calloc(64, sizeof(char));
+            snprintf(buf, 64, "\tcmpl\t%%%s, %%%s\n", r2Name, r1Name);
+            //Write to assembly
+            cas_proc_body(NULL, buf);
+            //Flags are now set, move vals
+            snprintf(buf, 64, "\tmovl\t$0, %%%s\n", r1Name);
+            cas_proc_body(NULL, buf);
+            snprintf(buf, 64, "\tmovl\t$1, %%%s\n", r2Name);
+            cas_proc_body(NULL, buf);
+            //Do conditional move
+            snprintf(buf, 64, "\tcmovle\t%%%s, %%%s\n", r2Name, r1Name);
+            cas_proc_body(NULL, buf);
+            //The truth value is now in $1's register, pass up, free resources
+            $$.val.ival = $1.val.ival;
+            $$.d_type = INT_T;
+            free(buf);
+            reg_release($3.val.ival);
+            }
 		| simple_expr LT add_expr
-                        {$$ = $1;}
+            {/*Logical less than*/
+            char *r1Name, *r2Name, *buf;
+            r1Name = reg_getName32($1.val.ival);
+            r2Name = reg_getName32($3.val.ival);
+            //Compare the two registers
+            buf = calloc(64, sizeof(char));
+            snprintf(buf, 64, "\tcmpl\t%%%s, %%%s\n", r2Name, r1Name);
+            //Write to assembly
+            cas_proc_body(NULL, buf);
+            //Flags are now set, move vals
+            snprintf(buf, 64, "\tmovl\t$0, %%%s\n", r1Name);
+            cas_proc_body(NULL, buf);
+            snprintf(buf, 64, "\tmovl\t$1, %%%s\n", r2Name);
+            cas_proc_body(NULL, buf);
+            //Do conditional move
+            snprintf(buf, 64, "\tcmovl\t%%%s, %%%s\n", r2Name, r1Name);
+            cas_proc_body(NULL, buf);
+            //The truth value is now in $1's register, pass up, free resources
+            $$.val.ival = $1.val.ival;
+            $$.d_type = INT_T;
+            free(buf);
+            reg_release($3.val.ival);
+            }
 
 		| simple_expr GE add_expr
-                        {$$ = $1;}
+            {/*Logical greater than or equals*/
+            char *r1Name, *r2Name, *buf;
+            r1Name = reg_getName32($1.val.ival);
+            r2Name = reg_getName32($3.val.ival);
+            //Compare the two registers
+            buf = calloc(64, sizeof(char));
+            snprintf(buf, 64, "\tcmpl\t%%%s, %%%s\n", r2Name, r1Name);
+            //Write to assembly
+            cas_proc_body(NULL, buf);
+            //Flags are now set, move vals
+            snprintf(buf, 64, "\tmovl\t$0, %%%s\n", r1Name);
+            cas_proc_body(NULL, buf);
+            snprintf(buf, 64, "\tmovl\t$1, %%%s\n", r2Name);
+            cas_proc_body(NULL, buf);
+            //Do conditional move
+            snprintf(buf, 64, "\tcmovge\t%%%s, %%%s\n", r2Name, r1Name);
+            cas_proc_body(NULL, buf);
+            //The truth value is now in $1's register, pass up, free resources
+            $$.val.ival = $1.val.ival;
+            $$.d_type = INT_T;
+            free(buf);
+            reg_release($3.val.ival);
+            }
 
 		| simple_expr GT add_expr
-                        {$$ = $1;}
+            {/*Logical greater than*/
+            char *r1Name, *r2Name, *buf;
+            r1Name = reg_getName32($1.val.ival);
+            r2Name = reg_getName32($3.val.ival);
+            //Compare the two registers
+            buf = calloc(64, sizeof(char));
+            snprintf(buf, 64, "\tcmpl\t%%%s, %%%s\n", r2Name, r1Name);
+            //Write to assembly
+            cas_proc_body(NULL, buf);
+            //Flags are now set, move vals
+            snprintf(buf, 64, "\tmovl\t$0, %%%s\n", r1Name);
+            cas_proc_body(NULL, buf);
+            snprintf(buf, 64, "\tmovl\t$1, %%%s\n", r2Name);
+            cas_proc_body(NULL, buf);
+            //Do conditional move
+            snprintf(buf, 64, "\tcmovg\t%%%s, %%%s\n", r2Name, r1Name);
+            cas_proc_body(NULL, buf);
+            //The truth value is now in $1's register, pass up, free resources
+            $$.val.ival = $1.val.ival;
+            $$.d_type = INT_T;
+            free(buf);
+            reg_release($3.val.ival);
+            }
 
 		| add_expr
                         {$$ = $1;}
@@ -435,11 +574,11 @@ add_expr	: add_expr PLUS mul_expr
              int d_type;
              /*Check for float vs int here */
 			 if($1.d_type == INT_T && $3.d_type == INT_T){
-                //Integer addition, attr.reg * attr2.reg, pass up right
+                //Integer addition, attr2.reg += attr.reg, pass up right
                 d_type = INT_T;
                 r1Name = reg_getName32($1.val.ival);
                 r2Name = reg_getName32($3.val.ival);
-                snprintf(buf, 64, "\taddl\t%%%s, %%%s\n", r1Name, r2Name);
+                snprintf(buf, 64, "\taddl\t%%%s, %%%s\n", r2Name, r1Name);
                 cas_proc_body(NULL, buf);
                 
 			 }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
@@ -448,11 +587,11 @@ add_expr	: add_expr PLUS mul_expr
 
 			 }else{
 
-			     if(DEBUG) printf("FLOAT - FLOAT = %f\n", $$.val.fval);
+			     if(DEBUG) printf("FLOAT + FLOAT = %f\n", $$.val.fval);
 			 } //Pass up type and result
              free(buf);
-             reg_release($1.val.ival);                
-             $$.val.ival = $3.val.ival; 
+             reg_release($3.val.ival);                
+             $$.val.ival = $1.val.ival; 
              $$.d_type = d_type;
 			 }
             
@@ -466,11 +605,11 @@ add_expr	: add_expr PLUS mul_expr
              int d_type;
              /*Check for float vs int here */
 			 if($1.d_type == INT_T && $3.d_type == INT_T){
-                //Integer subtraction, attr.reg * attr2.reg, pass up right
+                //Integer subtraction, attr2.reg - attr.reg, pass up right
                 d_type = INT_T;
                 r1Name = reg_getName32($1.val.ival);
                 r2Name = reg_getName32($3.val.ival);
-                snprintf(buf, 64, "\tsubl\t%%%s, %%%s\n", r1Name, r2Name);
+                snprintf(buf, 64, "\tsubl\t%%%s, %%%s\n", r2Name, r1Name);
                 cas_proc_body(NULL, buf);
                 
 			 }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
@@ -482,8 +621,8 @@ add_expr	: add_expr PLUS mul_expr
 			     if(DEBUG) printf("FLOAT - FLOAT = %f\n", $$.val.fval);
 			 } //Pass up type and result
              free(buf);
-             reg_release($1.val.ival);                
-             $$.val.ival = $3.val.ival; 
+             reg_release($3.val.ival);                
+             $$.val.ival = $1.val.ival; 
              $$.d_type = d_type;
             }
 			     
@@ -504,7 +643,7 @@ mul_expr    : mul_expr TIMES factor
                 d_type = INT_T;
                 r1Name = reg_getName32($1.val.ival);
                 r2Name = reg_getName32($3.val.ival);
-                snprintf(buf, 64, "\timull\t%%%s, %%%s\n", r1Name, r2Name);
+                snprintf(buf, 64, "\timull\t%%%s, %%%s\n", r2Name, r1Name);
                 cas_proc_body(NULL, buf);
                 
 			 }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
@@ -516,8 +655,8 @@ mul_expr    : mul_expr TIMES factor
 			     if(DEBUG) printf("FLOAT * FLOAT = %f\n", $$.val.fval);
 			 } //Pass up type and result
              free(buf);
-             reg_release($1.val.ival);                
-             $$.val.ival = $3.val.ival; 
+             reg_release($3.val.ival);                
+             $$.val.ival = $1.val.ival; 
              $$.d_type = d_type;
 			 }
             
@@ -529,11 +668,11 @@ mul_expr    : mul_expr TIMES factor
              int d_type;
              /*Check for float vs int here */
 			 if($1.d_type == INT_T && $3.d_type == INT_T){
-                //Integer division, attr.reg * attr2.reg, pass up right
+                //Integer division, SOMETHING SPECIAL
                 d_type = INT_T;
                 r1Name = reg_getName32($1.val.ival);
                 r2Name = reg_getName32($3.val.ival);
-                snprintf(buf, 64, "\timull\t%%%s, %%%s\n", r1Name, r2Name);
+                snprintf(buf, 64, "\timull\t%%%s, %%%s\n", r2Name, r1Name);
                 cas_proc_body(NULL, buf);
                 
 			 }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
@@ -542,11 +681,11 @@ mul_expr    : mul_expr TIMES factor
 
 			 }else{
 
-			     if(DEBUG) printf("FLOAT * FLOAT = %f\n", $$.val.fval);
+			     if(DEBUG) printf("FLOAT / FLOAT = %f\n", $$.val.fval);
 			 } //Pass up type and result
              free(buf);
-             $$.val.ival = $3.val.ival; 
-             reg_release($1.val.ival);                
+             $$.val.ival = $1.val.ival; 
+             reg_release($3.val.ival);                
              $$.d_type = d_type;
 			 }
             

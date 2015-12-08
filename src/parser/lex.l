@@ -78,12 +78,12 @@ int fltcount = 0;
 
 \'			{BEGIN(STR2STATE);
 			 MAX_STRING = 512;
-			 string = malloc(MAX_STRING*sizeof(char));
+			 string = calloc(MAX_STRING,sizeof(char));
 			 str_index = 0;}
 <STR2STATE>\\t		{
 			 if(str_index+1 == MAX_STRING){
 			     MAX_STRING <<= 1;
-			     char *news = malloc(MAX_STRING*sizeof(char));
+			     char *news = calloc(MAX_STRING,sizeof(char));
 			     memcpy(news, string, str_index);
 			     free(string);
 			     string = news;
@@ -93,7 +93,7 @@ int fltcount = 0;
 <STR2STATE>\\n		{
 			 if(str_index+1 == MAX_STRING){
 			     MAX_STRING <<= 1;
-			     char *news = malloc(MAX_STRING*sizeof(char));
+			     char *news = calloc(MAX_STRING,sizeof(char));
 			     memcpy(news, string, str_index);
 			     free(string);
 			     string = news;
@@ -103,7 +103,7 @@ int fltcount = 0;
 <STR2STATE>\\\"		{
 			 if(str_index+1 == MAX_STRING){
 			     MAX_STRING <<= 1;
-			     char *news = malloc(MAX_STRING*sizeof(char));
+			     char *news = calloc(MAX_STRING,sizeof(char));
 			     memcpy(news, string, str_index);
 			     free(string);
 			     string = news;
@@ -112,7 +112,8 @@ int fltcount = 0;
 
 <STR2STATE>\n		{ECHO; yyerror("Invalid string\n"); exit(1);}
 
-<STR2STATE>\'		{BEGIN 0; 
+<STR2STATE>\'		{BEGIN 0;
+             string[str_index] = '\0'; 
 			 char *name = malloc(32 * sizeof(char));
 			 sprintf(name, ".string_const%d", strcount++);
 			 yylval.name = name;
@@ -122,7 +123,7 @@ int fltcount = 0;
 			 return STRING;}
 <STR2STATE>.		{if(str_index+1 == MAX_STRING){
 			     MAX_STRING <<= 1;
-			     char *news = malloc(MAX_STRING*sizeof(char));
+			     char *news = calloc(MAX_STRING,sizeof(char));
 			     memcpy(news, string, str_index);
 			     free(string);
 			     string = news;
