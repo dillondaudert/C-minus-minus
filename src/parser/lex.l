@@ -71,7 +71,7 @@ int fltcount = 0;
 "0"|{NZ}{D}*		{yylval.val.ival = atoi(yytext); return INTCON;}
 {D}*"."{D}+{E}?		{yylval.val.fval = atof(yytext); 
 			 char *name = malloc(32*sizeof(char));
-			 snprintf(name, 32, ".LC%d", fltcount++);
+			 snprintf(name, 32, "v%d", fltcount++);
 			 yylval.name = strdup(name);
 			 free(name);
 			 return FLOATCON;}
