@@ -1,0 +1,59 @@
+st_init created the symbol table hash map
+Added a to $$names, count=1
+Adding new symbol: a, _gp, offset: 0, type: 0, size: 0, arr: 0
+st_add added a at position 64
+updating symbol a
+Symbol 64:a found
+Symbol a updated with size 4, offset 0
+
+Added b to $$names, count=1
+Adding new symbol: b, _gp, offset: 0, type: 0, size: 0, arr: 0
+st_add added b at position 67
+updating symbol b
+Symbol 67:b found
+Symbol b updated with size 4,offset 4
+
+
+Adding new symbol: decls, decls, offset: 0, type: 2, size: 4, arr: 0
+st_add added decls at position 400
+Added process decls to stable
+
+
+
+
+
+
+
+
+
+
+
+
+Adding new symbol: foo, foo, offset: 0, type: 2, size: 8, arr: 0
+st_add added foo at position 348
+Added process foo to stable
+
+
+
+
+
+
+
+Adding new symbol: main, main, offset: 0, type: 2, size: 4, arr: 0
+st_add added main at position 0
+Added process main to stable
+
+
+
+
+
+
+
+Static: 	.comm _gp, 8, 4
+
+Freed symbol at position 0
+Freed symbol at position 64
+Freed symbol at position 67
+Freed symbol at position 348
+Freed symbol at position 400
+Freed symbol table

@@ -1,0 +1,119 @@
+st_init created the symbol table hash map
+
+Added a to $$names, count=1
+Adding new symbol: a, _gp, offset: 0, type: 0, size: 0, arr: 0
+st_add added a at position 64
+Added b to $$names, count=2
+Adding new symbol: b, _gp, offset: 1, type: 0, size: 0, arr: 0
+st_add added b at position 67
+Added c to $$names, count=3
+Adding new symbol: c, _gp, offset: 2, type: 0, size: 0, arr: 0
+st_add added c at position 66
+Added d to $$names, count=4
+Adding new symbol: d, _gp, offset: 3, type: 0, size: 0, arr: 0
+st_add added d at position 69
+updating symbol a
+Symbol 64:a found
+Symbol a updated with size 4, offset 0
+updating symbol b
+Symbol 67:b found
+Symbol b updated with size 4, offset 4
+updating symbol c
+Symbol 66:c found
+Symbol c updated with size 4, offset 8
+updating symbol d
+Symbol 69:d found
+Symbol d updated with size 4, offset 12
+
+
+Adding new symbol: b4, b4, offset: 0, type: 2, size: 4, arr: 0
+st_add added b4 at position 383
+Added process b4 to stable
+
+
+
+
+
+
+Adding new symbol: d2, d2, offset: 0, type: 2, size: 8, arr: 0
+st_add added d2 at position 287
+Added process d2 to stable
+
+Added tmp to $$names, count=1
+Adding new symbol: tmp, _gp, offset: 0, type: 0, size: 0, arr: 0
+st_add added tmp at position 508
+updating symbol tmp
+Symbol 508:tmp found
+Symbol tmp updated with size 4, offset 0
+
+
+
+
+
+
+
+
+
+
+Adding new symbol: d3, d3, offset: 0, type: 2, size: 4, arr: 0
+st_add added d3 at position 218
+Added process d3 to stable
+
+
+
+
+
+
+
+
+
+Adding new symbol: d1, d1, offset: 0, type: 2, size: 4, arr: 0
+st_add added d1 at position 80
+Added process d1 to stable
+
+Added b to $$names, count=1
+Adding new symbol: b, _gp, offset: 0, type: 0, size: 0, arr: 0
+st_add, b already located at 67:b
+updating symbol b
+Symbol 67:b found
+Symbol b updated with size 4, offset 0
+
+
+
+
+
+
+
+
+
+
+
+
+Adding new symbol: main, main, offset: 0, type: 2, size: 4, arr: 0
+st_add added main at position 0
+Added process main to stable
+
+
+
+
+
+
+
+
+
+
+
+
+Static: 	.comm _gp, 16, 4
+
+Freed symbol at position 0
+Freed symbol at position 64
+Freed symbol at position 66
+Freed symbol at position 67
+Freed symbol at position 69
+Freed symbol at position 80
+Freed symbol at position 218
+Freed symbol at position 287
+Freed symbol at position 383
+Freed symbol at position 508
+Freed symbol table

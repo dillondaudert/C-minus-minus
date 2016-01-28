@@ -1,0 +1,93 @@
+st_init created the symbol table hash map
+Adding new symbol: main, main, offset: 0, type: 2, size: 4, arr: 0
+st_add added main at position 0
+Added process main to stable
+
+Added a to $$names, count=1
+Adding new symbol: a, _gp, offset: 0, type: 0, size: 0, arr: 0
+st_add added a at position 64
+Added b to $$names, count=2
+Adding new symbol: b, _gp, offset: 1, type: 0, size: 0, arr: 0
+st_add added b at position 67
+Added c to $$names, count=3
+Adding new symbol: c, _gp, offset: 2, type: 0, size: 0, arr: 0
+st_add added c at position 66
+Added d to $$names, count=4
+Adding new symbol: d, _gp, offset: 3, type: 0, size: 0, arr: 0
+st_add added d at position 69
+Added i to $$names, count=5
+Adding new symbol: i, _gp, offset: 4, type: 0, size: 0, arr: 0
+st_add added i at position 72
+Added j to $$names, count=6
+Adding new symbol: j, _gp, offset: 5, type: 0, size: 0, arr: 0
+st_add added j at position 75
+Added k to $$names, count=7
+Adding new symbol: k, _gp, offset: 6, type: 0, size: 0, arr: 0
+st_add added k at position 74
+Added l to $$names, count=8
+Adding new symbol: l, _gp, offset: 7, type: 0, size: 0, arr: 0
+st_add added l at position 77
+updating symbol a
+Symbol 64:a found
+Symbol a updated with size 8, offset 0
+updating symbol b
+Symbol 67:b found
+Symbol b updated with size 8, offset 8
+updating symbol c
+Symbol 66:c found
+Symbol c updated with size 8, offset 16
+updating symbol d
+Symbol 69:d found
+Symbol d updated with size 8, offset 24
+updating symbol i
+Symbol 72:i found
+Symbol i updated with size 8, offset 32
+updating symbol j
+Symbol 75:j found
+Symbol j updated with size 8, offset 40
+updating symbol k
+Symbol 74:k found
+Symbol k updated with size 8, offset 48
+updating symbol l
+Symbol 77:l found
+Symbol l updated with size 8, offset 56
+
+Added m to $$names, count=1
+Adding new symbol: m, _gp, offset: 0, type: 0, size: 0, arr: 0
+st_add added m at position 76
+updating symbol m
+Symbol 76:m found
+Symbol m updated with size 4,offset 64
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Freed symbol at position 0
+Freed symbol at position 64
+Freed symbol at position 66
+Freed symbol at position 67
+Freed symbol at position 69
+Freed symbol at position 72
+Freed symbol at position 74
+Freed symbol at position 75
+Freed symbol at position 76
+Freed symbol at position 77
+Freed symbol table

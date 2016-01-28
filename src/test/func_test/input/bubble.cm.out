@@ -1,0 +1,89 @@
+st_init created the symbol table hash map
+Adding new symbol: main, main, offset: 0, type: 2, size: 4, arr: 0
+st_add added main at position 0
+Added process main to stable
+
+
+Added a to $$names, count=1
+Adding new symbol: a, _gp, offset: 0, type: 1, size: 0, arr: 0
+st_add added a at position 64
+updating symbol a
+Symbol 64:a found
+Symbol a updated with size 4, offset 0
+
+Added i to $$names, count=1
+Adding new symbol: i, _gp, offset: 0, type: 0, size: 0, arr: 0
+st_add added i at position 72
+Added j to $$names, count=2
+Adding new symbol: j, _gp, offset: 1, type: 0, size: 0, arr: 0
+st_add added j at position 75
+Added t to $$names, count=3
+Adding new symbol: t, _gp, offset: 2, type: 0, size: 0, arr: 0
+st_add added t at position 85
+Added least to $$names, count=4
+Adding new symbol: least, _gp, offset: 3, type: 0, size: 0, arr: 0
+st_add, added least to collision LL at 0
+updating symbol i
+Symbol 72:i found
+Symbol i updated with size 4,offset 0
+updating symbol j
+Symbol 75:j found
+Symbol j updated with size 4,offset 4
+updating symbol t
+Symbol 85:t found
+Symbol t updated with size 4,offset 8
+updating symbol least
+Symbol least found in collision LL
+Symbol least updated with size 4,offset 12
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Freed symbol at position 0
+Freed LL symbol at position 0
+Freed link in collision LL at 0
+Freed symbol at position 64
+Freed symbol at position 72
+Freed symbol at position 75
+Freed symbol at position 85
+Freed symbol table

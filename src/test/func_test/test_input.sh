@@ -9,9 +9,9 @@
 
 echo "Testing syntax"
 
-for filename in ./input/*.cm; do
+for filename in /home/dillon/C-minus-minus/src/test/func_test/input/*.cm; do
 	echo ${filename}
-	./cmm $filename
+	./cmm $filename > ${filename}.out
 done
 
 echo "Done testing syntax"

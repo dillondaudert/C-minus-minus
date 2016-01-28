@@ -8,6 +8,9 @@
 	.type main @function
 
 main:	nop
-	.size	main, .-main
+	pushq	%rbp
+	movq	%rsp, %rbp
 	leave
 	ret
+	.size	main, .-main
+

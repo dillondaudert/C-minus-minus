@@ -1,0 +1,46 @@
+st_init created the symbol table hash map
+Adding new symbol: b1, b1, offset: 0, type: 2, size: 4, arr: 0
+st_add added b1 at position 48
+Added process b1 to stable
+
+
+
+
+
+Adding new symbol: b2, b2, offset: 0, type: 2, size: 4, arr: 0
+st_add added b2 at position 249
+Added process b2 to stable
+
+
+
+
+
+Adding new symbol: b3, b3, offset: 0, type: 2, size: 4, arr: 0
+st_add added b3 at position 182
+Added process b3 to stable
+
+
+
+
+
+Adding new symbol: b4, b4, offset: 0, type: 2, size: 4, arr: 0
+st_add added b4 at position 383
+Added process b4 to stable
+
+
+
+
+
+Adding new symbol: main, main, offset: 0, type: 2, size: 4, arr: 0
+st_add added main at position 0
+Added process main to stable
+
+
+
+
+Freed symbol at position 0
+Freed symbol at position 48
+Freed symbol at position 182
+Freed symbol at position 249
+Freed symbol at position 383
+Freed symbol table

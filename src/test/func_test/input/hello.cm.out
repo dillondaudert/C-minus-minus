@@ -1,0 +1,14 @@
+st_init created the symbol table hash map
+Adding new symbol: main, main, offset: 0, type: 2, size: 4, arr: 0
+st_add added main at position 0
+Added process main to stable
+
+Adding new symbol: .string_const0, .string_const0, offset: 0, type: 0, size: 13, arr: 0
+st_add, added .string_const0 to collision LL at 0
+
+
+
+Freed symbol at position 0
+Freed LL symbol at position 0
+Freed link in collision LL at 0
+Freed symbol table

@@ -1,0 +1,72 @@
+st_init created the symbol table hash map
+Adding new symbol: main, main, offset: 0, type: 2, size: 4, arr: 0
+st_add added main at position 0
+Added process main to stable
+
+Added a to $$names, count=1
+Adding new symbol: a, _gp, offset: 0, type: 0, size: 0, arr: 0
+st_add added a at position 64
+Added b to $$names, count=2
+Adding new symbol: b, _gp, offset: 1, type: 0, size: 0, arr: 0
+st_add added b at position 67
+updating symbol a
+Symbol 64:a found
+Symbol a updated with size 4, offset 0
+updating symbol b
+Symbol 67:b found
+Symbol b updated with size 4, offset 4
+
+
+Adding new symbol: .string_const0, .string_const0, offset: 0, type: 0, size: 9, arr: 0
+st_add, added .string_const0 to collision LL at 0
+
+Adding new symbol: .string_const1, .string_const1, offset: 0, type: 0, size: 9, arr: 0
+st_add, added .string_const1 to collision LL at 0
+
+
+
+
+Adding new symbol: .string_const2, .string_const2, offset: 0, type: 0, size: 135, arr: 0
+st_add, added .string_const2 to collision LL at 0
+
+
+
+
+Adding new symbol: .string_const3, .string_const3, offset: 0, type: 0, size: 7, arr: 0
+st_add, added .string_const3 to collision LL at 0
+
+
+
+
+
+
+Adding new symbol: .string_const4, .string_const4, offset: 0, type: 0, size: 397, arr: 0
+st_add, added .string_const4 to collision LL at 0
+
+
+
+
+Adding new symbol: .string_const5, .string_const5, offset: 0, type: 0, size: 7, arr: 0
+st_add, added .string_const5 to collision LL at 0
+
+
+
+
+
+
+Freed symbol at position 0
+Freed LL symbol at position 0
+Freed link in collision LL at 0
+Freed LL symbol at position 0
+Freed link in collision LL at 0
+Freed LL symbol at position 0
+Freed link in collision LL at 0
+Freed LL symbol at position 0
+Freed link in collision LL at 0
+Freed LL symbol at position 0
+Freed link in collision LL at 0
+Freed LL symbol at position 0
+Freed link in collision LL at 0
+Freed symbol at position 64
+Freed symbol at position 67
+Freed symbol table

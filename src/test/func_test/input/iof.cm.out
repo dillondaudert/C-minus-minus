@@ -1,0 +1,21 @@
+st_init created the symbol table hash map
+Adding new symbol: main, main, offset: 0, type: 2, size: 4, arr: 0
+st_add added main at position 0
+Added process main to stable
+
+Added b to $$names, count=1
+Adding new symbol: b, _gp, offset: 0, type: 0, size: 0, arr: 0
+st_add added b at position 67
+updating symbol b
+Symbol 67:b found
+Symbol b updated with size 8, offset 0
+
+
+
+
+
+
+
+Freed symbol at position 0
+Freed symbol at position 67
+Freed symbol table

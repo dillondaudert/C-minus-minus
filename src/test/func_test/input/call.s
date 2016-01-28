@@ -2,20 +2,27 @@
 .int_wformat: .string "%d\n"
 .str_wformat: .string "%s\n"
 .int_rformat: .string "%d"
-.string_const0: .string "Hello world!"
-
+	.globl decls
+	.type decls @function
+	.globl foo
+	.type foo @function
 	.globl main
 	.type main @function
 
+decls:	nop
+	pushq	%rbp
+	movq	%rsp, %rbp
+foo:	nop
+	pushq	%rbp
+	movq	%rsp, %rbp
 main:	nop
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	$.string_const0, %ebx
-	movl	%ebx, %esi
-	movl	$0, %eax
-	movl	$.str_wformat, %edi
-	call	printf
+	ret
+	ret
 	leave
 	ret
+	.size	decls, .-decls
+	.size	foo, .-foo
 	.size	main, .-main
 
