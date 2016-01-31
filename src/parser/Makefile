@@ -1,8 +1,8 @@
 #Parser Makefile
 
 CC = gcc
-CFLAGS = -Wall --std=gnu99 -O3 -flto
-LDFLAGS = -O3 -flto
+CFLAGS = -Wall --std=gnu99 -O0 -g -flto
+LDFLAGS = -O0 -flto
 INC = -I../include
 casdir = ../assembly
 stdir = ../stable
