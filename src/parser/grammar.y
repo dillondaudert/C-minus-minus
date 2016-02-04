@@ -666,6 +666,7 @@ mul_expr    : mul_expr TIMES factor
 			 char *buf = calloc(64, sizeof(char));
              char *r1Name, *r2Name;
              int d_type;
+             int newreg;
              /*Check for float vs int here */
 			 if($1.d_type == INT_T && $3.d_type == INT_T){
                 //Integer division, SOMETHING SPECIAL
@@ -673,8 +674,47 @@ mul_expr    : mul_expr TIMES factor
                 d_type = INT_T;
                 r1Name = reg_getName32($1.val.ival);
                 r2Name = reg_getName32($3.val.ival);
-                snprintf(buf, 64, "\timull\t%%%s, %%%s\n", r2Name, r1Name);
+                //move the dividend into eax if it isn't already there
+                if( strcmp(r1Name, "eax") != 0){
+                    if(DEBUG) printf("Moving divisor from %s into %%eax\n", r1Name);
+                    //Move contents of %eax and %edx so we can use them
+                    snprintf(buf, 64, "\tpushq\t%%rax\n");
+                    cas_proc_body(NULL, buf);
+                    snprintf(buf, 64, "\tmovl\t%%%s, %%eax\n", r1Name);
+                    cas_proc_body(NULL, buf);
+                }
+                //If the divisor is in %edx, must be allocated new register. 
+                //Otherwise, move contents of %edx ...
+                if( strcmp(r2Name, "edx") == 0){
+                    if(DEBUG) printf("Moving contents of edx into different reg\n");
+                    newreg = reg_get();
+                    r2Name = reg_getName32(newreg);
+                    reg_release($3.val.ival); //release the edx register
+                    $3.val.ival = newreg;
+                    //Move the divisor out of %edx into new register
+                    snprintf(buf, 64, "\tmovl\t%%edx, %%%s\n", r2Name);
+                    cas_proc_body(NULL, buf);
+                }
+                //%edx may be in use, save its contents on the stack
+                snprintf(buf, 64, "\tpushq\t%%rdx\n");
                 cas_proc_body(NULL, buf);
+                //Sign extend into edx, then divide
+                snprintf(buf, 64, "\tcltd\n");
+                cas_proc_body(NULL, buf);
+                snprintf(buf, 64, "\tidivl\t%%%s\n", r2Name);
+                cas_proc_body(NULL, buf);
+                //Pop rdx back off stack
+                snprintf(buf, 64, "\tpopq\t%%rdx\n");
+                cas_proc_body(NULL, buf);
+
+                if( strcmp(r1Name, "eax") != 0){
+                    //Move the results back into the original register
+                    snprintf(buf, 64, "\tmovl\t%%eax, %%%s\n", r1Name);
+                    cas_proc_body(NULL, buf);
+                    //Replace contents of eax and edx
+                    snprintf(buf, 64, "\tpopq\t%%rax\n");
+                    cas_proc_body(NULL, buf);
+                }
                 
 			 }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
 
@@ -784,39 +824,32 @@ string_constant	: STRING
 
 constant    : INTCON
             {//Put constant into register, pass reg val up
-			 int reg = reg_get();
-			 char *rName = reg_getName32(reg);
-			 char *buf = calloc(64, sizeof(char));
-			 //Build assembly string
-			 snprintf(buf, 64, "\tmovl\t$%d, %%%s\n", $1.val.ival, rName);
-			 //Write to output
-			 cas_proc_body(NULL, buf);
-			 //Pass up register reference and data type
-			 $$.val.ival = reg;
-			 $$.d_type = INT_T;
+             int reg = reg_get();
+             char *rName = reg_getName32(reg);
+             char *buf = calloc(64, sizeof(char));
+             //Build assembly string
+             snprintf(buf, 64, "\tmovl\t$%d, %%%s\n", $1.val.ival, rName);
+             //Write to output
+             cas_proc_body(NULL, buf);
+             //Pass up register reference and data type
+             $$.val.ival = reg;
+             $$.d_type = INT_T;
              //Type is a constant
              $$.type = -1;
-			 free(buf);
+             free(buf);
              if(DEBUG) printf("Putting int %d into reg %s\n", $1.val.ival, rName);
-			}
+            }
 
-        | FLOATCON
-			{//Put float constant into register
-			 int reg = reg_get();
-			 char *rName = reg_getName64(reg);
-			 char *buf = calloc(64, sizeof(char));
-			 //Build assembly string
-			 snprintf(buf, 64, "\tmovl\t$%f, %%%s\n", $1.val.fval, rName);
-			 //Write to output
-			 cas_proc_body(NULL, buf);
-			 //Pass up register reference and data type
-			 $$.val.ival = reg;
-			 $$.d_type = FLOAT_T;
-             //Type is a constant
-             $$.type = -1;
-			 free(buf);
-             if(DEBUG) printf("Putting float %f into reg %s\n", $1.val.fval, rName);
-			}
+            | FLOATCON
+            {//Write float as label, put into FPU register
+             char *buf = calloc(64, sizeof(char));
+             //Build assembly string for label
+             snprintf(buf, 64, "%s:\n\t.float\t%f\n", $1.name, $1.val.fval);
+             //write to output
+             cas_static(buf);
+             //Put float constant into FPU register
+             
+            }
 
 		; 
 
