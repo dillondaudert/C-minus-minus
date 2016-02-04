@@ -662,13 +662,14 @@ mul_expr    : mul_expr TIMES factor
             
 
 		| mul_expr DIVIDE factor
-            {/*Register in lval.val.ival, data type in attr.d_type */
+            {/*Register in lval.val.ival, data type in lval.d_type */
 			 char *buf = calloc(64, sizeof(char));
              char *r1Name, *r2Name;
              int d_type;
              /*Check for float vs int here */
 			 if($1.d_type == INT_T && $3.d_type == INT_T){
                 //Integer division, SOMETHING SPECIAL
+                //Either use x87 or MMX ...
                 d_type = INT_T;
                 r1Name = reg_getName32($1.val.ival);
                 r2Name = reg_getName32($3.val.ival);
