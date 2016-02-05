@@ -11,7 +11,8 @@
 #define SEC_PROC_HEAD 4
 #define SEC_PROC_DECL 5
 #define SEC_PROC_BODY 6
-#define SEC_EPIL 7
+#define SEC_FLOAT 7
+#define SEC_EPIL 8
 
 extern FILE *casout;
 
@@ -23,3 +24,4 @@ extern int cas_proc_head(char *, char *);
 extern int cas_proc_decls(char *, char *);
 extern int cas_proc_body(char *, char *);
 extern int cas_proc_foot(char *, char *);
+extern int cas_float(char *);

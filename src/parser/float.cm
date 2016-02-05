@@ -1,0 +1,8 @@
+int main () {
+    int i, j;
+    float a, b;
+
+    i = 4;
+    a = 3.3;
+    exit;
+}

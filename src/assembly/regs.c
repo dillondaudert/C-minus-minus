@@ -6,9 +6,11 @@
 #include "reg.h"
 #include "cmm.h"
 
-#define length 12
+#define NUM_REGS 12
+#define NUM_XMM 16
 
-static int regs[length] = {0};
+static int regs[NUM_REGS] = {0};
+static int xmm_regs[NUM_XMM] = {0};
 
 /* reg_get() returns an integer value for an unused register.
  * If all registers are full, it will return -1
@@ -16,7 +18,7 @@ static int regs[length] = {0};
 int reg_get()
 {
     REGS i;
-    for(i = 0; i < length && regs[i] != 0; i++);
+    for(i = 0; i < NUM_REGS && regs[i] != 0; i++);
     switch(i){
         case ax:
             regs[i] = 1;
@@ -57,6 +59,67 @@ int reg_get()
     }
     if(DEBUG) printf("Registers exhausted; error!\n");
     return -1;
+}
+
+/* reg_getXMM returns an integer value for an xmm register
+ * If all xmm registers are taken, -1 will be returned*/
+int reg_getXMM()
+{
+    XMM_REGS i;
+    for(i = 0; i < NUM_XMM && xmm_regs[i] != 0; i++);
+    switch(i){
+        case xmm0:
+            xmm_regs[i] = 1;
+            return 0;
+        case xmm1:
+            xmm_regs[i] = 1;
+            return 1;
+        case xmm2:
+            xmm_regs[i] = 1;
+            return 2;
+        case xmm3:
+            xmm_regs[i] = 1;
+            return 3;
+        case xmm4:
+            xmm_regs[i] = 1;
+            return 4;
+        case xmm5:
+            xmm_regs[i] = 1;
+            return 5;
+        case xmm6:
+            xmm_regs[i] = 1;
+            return 6;
+        case xmm7:
+            xmm_regs[i] = 1;
+            return 7;
+        case xmm8:
+            xmm_regs[i] = 1;
+            return 8;
+        case xmm9:
+            xmm_regs[i] = 1;
+            return 9;
+        case xmm10:
+            xmm_regs[i] = 1;
+            return 10;
+        case xmm11:
+            xmm_regs[i] = 1;
+            return 11;
+        case xmm12:
+            xmm_regs[i] = 1;
+            return 12;
+        case xmm13:
+            xmm_regs[i] = 1;
+            return 13;
+        case xmm14:
+            xmm_regs[i] = 1;
+            return 14;
+        case xmm15:
+            xmm_regs[i] = 1;
+            return 15;
+    }
+    if(DEBUG) printf("XMM Registers exhausted; error!\n");
+    return -1;
+
 }
 
 /* reg_getName32 returns the lower 32bit name of the register
@@ -131,9 +194,45 @@ char *reg_getName64(int reg)
     return NULL;
 }
 
-int reg_getFP()
+char *reg_getNameXMM(int xmm)
 {
-    return -1;
+    XMM_REGS i = xmm;
+    switch(i){
+        case xmm0:
+            return "xmm0";
+        case xmm1:
+            return "xmm1";
+        case xmm2:
+            return "xmm2";
+        case xmm3:
+            return "xmm3";
+        case xmm4:
+            return "xmm4";
+        case xmm5:
+            return "xmm5";
+        case xmm6:
+            return "xmm6";
+        case xmm7:
+            return "xmm7";
+        case xmm8:
+            return "xmm8";
+        case xmm9:
+            return "xmm9";
+        case xmm10:
+            return "xmm10";
+        case xmm11:
+            return "xmm11";
+        case xmm12:
+            return "xmm12";
+        case xmm13:
+            return "xmm13";
+        case xmm14:
+            return "xmm14";
+        case xmm15:
+            return "xmm15";
+    }
+    if(DEBUG) printf("Cannot find name for xmm register, error!\n");
+    return NULL;
 }
 
 /* reg_release returns the register specified by reg
@@ -142,5 +241,11 @@ int reg_getFP()
 int reg_release(int reg)
 {
     regs[reg] = 0;
+    return 0;
+}
+
+int xmm_release(int xmm_reg)
+{
+    xmm_regs[xmm_reg] = 0;
     return 0;
 }

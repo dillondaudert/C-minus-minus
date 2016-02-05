@@ -841,13 +841,24 @@ constant    : INTCON
             }
 
             | FLOATCON
-            {//Write float as label, put into FPU register
+            {//Write float as label, put into XMM register
+             int xmm_reg = reg_getXMM();
+             char *rName = reg_getNameXMM(xmm_reg);
              char *buf = calloc(64, sizeof(char));
              //Build assembly string for label
              snprintf(buf, 64, "%s:\n\t.float\t%f\n", $1.name, $1.val.fval);
              //write to output
-             cas_static(buf);
-             //Put float constant into FPU register
+             cas_float(buf);
+             //Put float constant into XMM register
+             snprintf(buf, 64, "\tmovss\t%s(%%rip), %%%s\n", $1.name, rName);
+             cas_proc_body(NULL, buf);
+             //Pass up register info, data type, name
+             $$.val.ival = xmm_reg;
+             $$.d_type = FLOAT_T;
+             //Type is constant
+             $$.type = -1;
+             free(buf);
+             if(DEBUG) printf("Putting float %f into reg %s\n", $1.val.fval, rName);
              
             }
 

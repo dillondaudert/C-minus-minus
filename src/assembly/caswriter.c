@@ -31,6 +31,8 @@ char *sec_proc_decls;
 char *sec_proc_bods;
 //Contains function footers
 char *sec_proc_feet;
+//Contains floating point numbers
+char *sec_floats;
 
 /******************* Internal functions ***************************************/
 
@@ -171,6 +173,8 @@ int cas_writer(char *path)
     if(sec_proc_bods != NULL) cas_write(sec_proc_bods);
     //Process footers
     if(sec_proc_feet != NULL) cas_write(sec_proc_feet);
+    //Floating point #s
+    if(sec_floats != NULL) cas_write(sec_floats);
     //Epilogue
     cas_epil();
     cas_write("\n");  
@@ -349,6 +353,33 @@ int cas_proc_foot(char *name, char *foot)
     strcat(tmp,foot);
     free(sec_proc_feet);
     sec_proc_feet = strdup(tmp);
+    //Free strings
+    free(tmp);
+    return 0;
+    
+}
+
+
+int cas_float(char *label)
+{
+    //Initialize the section if empty
+    if( sec_floats == NULL ){
+        if( ( sec_floats = calloc(8, sizeof(char)) ) == NULL ){
+            printf("Calloc error in caswriter.c:cas_float\n");
+            exit(0);
+        }
+        //Null terminate string at beginning
+        sec_floats[0] = '\0';
+    }
+
+    //Allocate new string with space for appending
+    char *tmp = calloc(strlen(sec_floats)+strlen(label)+1, sizeof(char));
+    //Copy old + null char
+    strncpy(tmp, sec_floats, strlen(sec_floats)+1);
+    //Concat new string
+    strcat(tmp,label);
+    free(sec_floats);
+    sec_floats = strdup(tmp);
     //Free strings
     free(tmp);
     return 0;
