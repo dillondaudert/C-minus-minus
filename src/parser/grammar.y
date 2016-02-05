@@ -306,16 +306,28 @@ assignment	: variable ASSIGN expr SC
              }
              char *buf = calloc(64, sizeof(char));
              char *r1Name, *r2Name;
-             r1Name = reg_getName64($1.val.ival);
-             r2Name = reg_getName32($3.val.ival);
-             //movl %r1-32, (%r2-64) ; move value into the location dereferenced by r2
-             snprintf(buf, 64, "\tmovl\t%%%s, (%%%s)\n", r2Name, r1Name);
-             cas_proc_body(NULL, buf);
-             free(buf);
-             //Release both registers
-             reg_release($1.val.ival);
-             reg_release($3.val.ival);
-             if(DEBUG) printf("Assigned value from reg %s into %s\n", r2Name, r1Name);
+             if( $1.d_type == INT_T ){
+                r1Name = reg_getName64($1.val.ival);
+                r2Name = reg_getName32($3.val.ival);
+                //movl %r1-32, (%r2-64) ; move value into the location dereferenced by r2
+                snprintf(buf, 64, "\tmovl\t%%%s, (%%%s)\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                free(buf);
+                //Release both registers
+                reg_release($1.val.ival);
+                reg_release($3.val.ival);
+                if(DEBUG) printf("Assigned value from reg %s into %s\n", r2Name, r1Name);
+             }else if( $1.d_type == FLOAT_T ){
+                r1Name = reg_getName64($1.val.ival);
+                r2Name = reg_getNameXMM($3.val.ival);
+                //Move the value of expr into location dereferenced by r1
+                snprintf(buf, 64, "\tmovss\t%%%s, (%%%s)\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                free(buf);
+                reg_release($1.val.ival);
+                xmm_release($3.val.ival);
+             }
+
             }
 		;
 
@@ -350,27 +362,30 @@ io_statement	: READ LP variable RP SC
 		| WRITE LP expr RP SC
             {//Value stored in $3.ival register, print by type
 			 char *buf = calloc(64, sizeof(char));
-             char *rName = reg_getName32($3.val.ival); 
+             char *rName; 
 			 //Print the constant that was evaluated
 			 if($3.d_type == INT_T){
+                 rName = reg_getName32($3.val.ival);
 			     //Create string to move value into source register
 			     snprintf(buf,64,"\tmovl\t%%%s, %%esi\n",rName);
 			     cas_proc_body(NULL,buf);
 			     cas_proc_body(NULL,"\tmovl\t$0, \%eax\n");
 			     cas_proc_body(NULL,"\tmovl\t$.int_wformat, \%edi\n");
 			     cas_proc_body(NULL,"\tcall\tprintf\n"); 
+                 reg_release($3.val.ival);
                  
 			 }else{
 				 //Put the # of fp args passed to printf in %eax
 				 //movss (32bit FP) their vals into xmm0, xmm1, etc
+                 rName = reg_getNameXMM($3.val.ival);
 			     snprintf(buf,64,"\tmovss\t%%%s, %%xmm0\n",rName);
 			     cas_proc_body(NULL,buf);
 			     cas_proc_body(NULL,"\tmovl\t$1, \%eax\n");
 			     cas_proc_body(NULL,"\tmovl\t$.flt_wformat, \%edi\n");
 			     cas_proc_body(NULL,"\tcall\tprintf\n");
-			 }
+			     xmm_release($3.val.ival); 
+            }
             free(buf);
-            reg_release($3.val.ival);
 			 
 			}
 		| WRITE LP string_constant RP SC
@@ -574,23 +589,54 @@ add_expr	: add_expr PLUS mul_expr
              int d_type;
              /*Check for float vs int here */
 			 if($1.d_type == INT_T && $3.d_type == INT_T){
-                //Integer addition, attr2.reg += attr.reg, pass up right
+                //Integer addition
                 d_type = INT_T;
                 r1Name = reg_getName32($1.val.ival);
                 r2Name = reg_getName32($3.val.ival);
                 snprintf(buf, 64, "\taddl\t%%%s, %%%s\n", r2Name, r1Name);
                 cas_proc_body(NULL, buf);
+                reg_release($3.val.ival);                
                 
 			 }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
-
+                //Add an int const to float, return float
+                d_type = FLOAT_T;
+                r1Name = reg_getNameXMM($1.val.ival);
+                r2Name = reg_getName32($3.val.ival);
+                int new_xmm = reg_getXMM();
+                char *newName = reg_getNameXMM(new_xmm);
+                snprintf(buf, 64, "\tcvtsi2ss\t%%%s, %%%s\n", r2Name, newName);
+                cas_proc_body(NULL, buf);
+                reg_release($3.val.ival);
+                $3.val.ival = new_xmm;
+                r2Name = newName;
+                snprintf(buf, 64, "\taddss\t%%%s, %%%s\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                reg_release($3.val.ival);
 			 }else if($1.d_type == INT_T && $3.d_type == FLOAT_T){
-
+                //Add float to int, return float
+                d_type = FLOAT_T;
+                r1Name = reg_getName32($1.val.ival);
+                r2Name = reg_getNameXMM($3.val.ival);
+                int new_xmm = reg_getXMM();
+                char *newName = reg_getNameXMM(new_xmm);
+                snprintf(buf, 64, "\tcvtsi2ss\t%%%s, %%%s\n", r1Name, newName);
+                cas_proc_body(NULL, buf);
+                reg_release($1.val.ival);
+                $1.val.ival = new_xmm;
+                r1Name = newName;
+                snprintf(buf, 64, "\taddss\t%%%s, %%%s\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                xmm_release($3.val.ival);
+                
 			 }else{
-
-			     if(DEBUG) printf("FLOAT + FLOAT = %f\n", $$.val.fval);
+                d_type = FLOAT_T;
+                r1Name = reg_getNameXMM($1.val.ival);
+                r2Name = reg_getNameXMM($3.val.ival);
+                snprintf(buf, 64, "\taddss\t%%%s, %%%s\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                xmm_release($3.val.ival);
 			 } //Pass up type and result
              free(buf);
-             reg_release($3.val.ival);                
              $$.val.ival = $1.val.ival; 
              $$.d_type = d_type;
 			 }

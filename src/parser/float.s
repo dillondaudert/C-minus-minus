@@ -18,7 +18,14 @@ main:	nop
 	movq	%rbp, %rax
 	subq	$8, %rax
 	movss	.v0(%rip), %xmm0
-	movl	%eax, (%rax)
+	movss	%xmm0, (%rax)
+	movq	%rbp, %rax
+	subq	$8, %rax
+	movl	(%rax), %ebx
+	movss	%xmm1, %xmm0
+	movl	$1, %eax
+	movl	$.flt_wformat, %edi
+	call	printf
 	leave
 	ret
 	.size	main, .-main

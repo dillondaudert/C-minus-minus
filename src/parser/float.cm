@@ -4,5 +4,6 @@ int main () {
 
     i = 4;
     a = 3.3;
+    write(a);
     exit;
 }
