@@ -1,10 +1,27 @@
 int main () {
     int i, j;
     float a, b;
-
-    i = 4;
-    a = 3.3;
-    write(i);
-    write(a);
+    i = 10;
+    a =  6.5;
+    write('10 - 6.5 =');
+    write(i - a);
+    write('6.5 - 10 =');
+    write(a - i);
+    write('6.5 - 6.5 =');
+    write(a - a);
+    write('10 * 6.5 =');
+    write(i * a);
+    write('6.5* 10 =');
+    write(a * i);
+    write('6.5 * 6.5 =');
+    write(a * a);
+    write('10 / 6.5 =');
+    write(i / a);
+    write('6.5 / 10 =');
+    write(a / i);
+    write('6.5 / 6.5 =');
+    write(a / a);
+    write('10 / 3 =');
+    write(i / 3);
     exit;
 }

@@ -662,12 +662,43 @@ add_expr	: add_expr PLUS mul_expr
                 cas_proc_body(NULL, buf);
                 
 			 }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
-
+                //Sub an int const from float, return float
+                d_type = FLOAT_T;
+                r1Name = reg_getNameXMM($1.val.ival);
+                r2Name = reg_getName32($3.val.ival);
+                int new_xmm = reg_getXMM();
+                char *newName = reg_getNameXMM(new_xmm);
+                snprintf(buf, 64, "\tcvtsi2ss\t%%%s, %%%s\n", r2Name, newName);
+                cas_proc_body(NULL, buf);
+                reg_release($3.val.ival);
+                $3.val.ival = new_xmm;
+                r2Name = newName;
+                snprintf(buf, 64, "\tsubss\t%%%s, %%%s\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                reg_release($3.val.ival);
 			 }else if($1.d_type == INT_T && $3.d_type == FLOAT_T){
-
+                //Sub float from int, return float
+                d_type = FLOAT_T;
+                r1Name = reg_getName32($1.val.ival);
+                r2Name = reg_getNameXMM($3.val.ival);
+                int new_xmm = reg_getXMM();
+                char *newName = reg_getNameXMM(new_xmm);
+                snprintf(buf, 64, "\tcvtsi2ss\t%%%s, %%%s\n", r1Name, newName);
+                cas_proc_body(NULL, buf);
+                reg_release($1.val.ival);
+                $1.val.ival = new_xmm;
+                r1Name = newName;
+                snprintf(buf, 64, "\tsubss\t%%%s, %%%s\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                xmm_release($3.val.ival);
+                
 			 }else{
-
-			     if(DEBUG) printf("FLOAT - FLOAT = %f\n", $$.val.fval);
+                d_type = FLOAT_T;
+                r1Name = reg_getNameXMM($1.val.ival);
+                r2Name = reg_getNameXMM($3.val.ival);
+                snprintf(buf, 64, "\tsubss\t%%%s, %%%s\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                xmm_release($3.val.ival);
 			 } //Pass up type and result
              free(buf);
              reg_release($3.val.ival);                
@@ -696,12 +727,42 @@ mul_expr    : mul_expr TIMES factor
                 cas_proc_body(NULL, buf);
                 
 			 }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
-
+                //Mult an int const from float, return float
+                d_type = FLOAT_T;
+                r1Name = reg_getNameXMM($1.val.ival);
+                r2Name = reg_getName32($3.val.ival);
+                int new_xmm = reg_getXMM();
+                char *newName = reg_getNameXMM(new_xmm);
+                snprintf(buf, 64, "\tcvtsi2ss\t%%%s, %%%s\n", r2Name, newName);
+                cas_proc_body(NULL, buf);
+                reg_release($3.val.ival);
+                $3.val.ival = new_xmm;
+                r2Name = newName;
+                snprintf(buf, 64, "\tmulss\t%%%s, %%%s\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                reg_release($3.val.ival);
 			 }else if($1.d_type == INT_T && $3.d_type == FLOAT_T){
-
+                d_type = FLOAT_T;
+                r1Name = reg_getName32($1.val.ival);
+                r2Name = reg_getNameXMM($3.val.ival);
+                int new_xmm = reg_getXMM();
+                char *newName = reg_getNameXMM(new_xmm);
+                snprintf(buf, 64, "\tcvtsi2ss\t%%%s, %%%s\n", r1Name, newName);
+                cas_proc_body(NULL, buf);
+                reg_release($1.val.ival);
+                $1.val.ival = new_xmm;
+                r1Name = newName;
+                snprintf(buf, 64, "\tmulss\t%%%s, %%%s\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                xmm_release($3.val.ival);
+                
 			 }else{
-
-			     if(DEBUG) printf("FLOAT * FLOAT = %f\n", $$.val.fval);
+                d_type = FLOAT_T;
+                r1Name = reg_getNameXMM($1.val.ival);
+                r2Name = reg_getNameXMM($3.val.ival);
+                snprintf(buf, 64, "\tmulss\t%%%s, %%%s\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                xmm_release($3.val.ival);
 			 } //Pass up type and result
              free(buf);
              reg_release($3.val.ival);                
@@ -718,14 +779,22 @@ mul_expr    : mul_expr TIMES factor
              int newreg;
              /*Check for float vs int here */
 			 if($1.d_type == INT_T && $3.d_type == INT_T){
-                //Integer division, SOMETHING SPECIAL
-                //Either use x87 or MMX ...
                 d_type = INT_T;
                 r1Name = reg_getName32($1.val.ival);
                 r2Name = reg_getName32($3.val.ival);
+                //If the divisor is in eax, move to different register
+                if( strcmp(r2Name, "eax") == 0){
+                  if(DEBUG) printf("Moving divisor out of eax\n");
+                  newreg = reg_get();
+                  r2Name = reg_getName32(newreg);
+                  reg_release($3.val.ival);
+                  $3.val.ival = newreg;
+                  snprintf(buf, 64, "\tmovl\t%%eax, %%%s\n",r2Name);
+                  cas_proc_body(NULL, buf);
+                }
                 //move the dividend into eax if it isn't already there
                 if( strcmp(r1Name, "eax") != 0){
-                    if(DEBUG) printf("Moving divisor from %s into %%eax\n", r1Name);
+                    if(DEBUG) printf("Moving dividend from %s into %%eax\n", r1Name);
                     //Move contents of %eax and %edx so we can use them
                     snprintf(buf, 64, "\tpushq\t%%rax\n");
                     cas_proc_body(NULL, buf);
@@ -766,12 +835,42 @@ mul_expr    : mul_expr TIMES factor
                 }
                 
 			 }else if($1.d_type == FLOAT_T && $3.d_type == INT_T){
-
+                //Div an int const from float, return float
+                d_type = FLOAT_T;
+                r1Name = reg_getNameXMM($1.val.ival);
+                r2Name = reg_getName32($3.val.ival);
+                int new_xmm = reg_getXMM();
+                char *newName = reg_getNameXMM(new_xmm);
+                snprintf(buf, 64, "\tcvtsi2ss\t%%%s, %%%s\n", r2Name, newName);
+                cas_proc_body(NULL, buf);
+                reg_release($3.val.ival);
+                $3.val.ival = new_xmm;
+                r2Name = newName;
+                snprintf(buf, 64, "\tdivss\t%%%s, %%%s\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                reg_release($3.val.ival);
 			 }else if($1.d_type == INT_T && $3.d_type == FLOAT_T){
-
+                d_type = FLOAT_T;
+                r1Name = reg_getName32($1.val.ival);
+                r2Name = reg_getNameXMM($3.val.ival);
+                int new_xmm = reg_getXMM();
+                char *newName = reg_getNameXMM(new_xmm);
+                snprintf(buf, 64, "\tcvtsi2ss\t%%%s, %%%s\n", r1Name, newName);
+                cas_proc_body(NULL, buf);
+                reg_release($1.val.ival);
+                $1.val.ival = new_xmm;
+                r1Name = newName;
+                snprintf(buf, 64, "\tdivss\t%%%s, %%%s\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                xmm_release($3.val.ival);
+                
 			 }else{
-
-			     if(DEBUG) printf("FLOAT / FLOAT = %f\n", $$.val.fval);
+                d_type = FLOAT_T;
+                r1Name = reg_getNameXMM($1.val.ival);
+                r2Name = reg_getNameXMM($3.val.ival);
+                snprintf(buf, 64, "\tdivss\t%%%s, %%%s\n", r2Name, r1Name);
+                cas_proc_body(NULL, buf);
+                xmm_release($3.val.ival);
 			 } //Pass up type and result
              free(buf);
              $$.val.ival = $1.val.ival; 
