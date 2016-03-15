@@ -20,9 +20,16 @@ main:	nop
 	movss	.v0(%rip), %xmm0
 	movss	%xmm0, (%rax)
 	movq	%rbp, %rax
-	subq	$8, %rax
+	subq	$0, %rax
 	movl	(%rax), %ebx
-	movss	%xmm1, %xmm0
+	movl	%ebx, %esi
+	movl	$0, %eax
+	movl	$.int_wformat, %edi
+	call	printf
+	movq	%rbp, %rax
+	subq	$8, %rax
+	movss	(%rax), %xmm0
+	cvtps2pd	%xmm0, %xmm0
 	movl	$1, %eax
 	movl	$.flt_wformat, %edi
 	call	printf

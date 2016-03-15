@@ -1,7 +1,7 @@
 int main () {
  int i,j,k,l;
 
-	write(51/17);
+	write(51/18);
 	i=100;  k=5; l=2;
 	j = i / k / l ;
 	write(j);

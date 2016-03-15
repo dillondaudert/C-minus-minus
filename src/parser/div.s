@@ -12,7 +12,7 @@ main:	nop
 	movq	%rsp, %rbp
 	subq	$16, %rsp
 	movl	$51, %eax
-	movl	$17, %ebx
+	movl	$18, %ebx
 	pushq	%rdx
 	cltd
 	idivl	%ebx

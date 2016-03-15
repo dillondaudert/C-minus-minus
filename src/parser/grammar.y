@@ -378,8 +378,11 @@ io_statement	: READ LP variable RP SC
 				 //Put the # of fp args passed to printf in %eax
 				 //movss (32bit FP) their vals into xmm0, xmm1, etc
                  rName = reg_getNameXMM($3.val.ival);
-			     snprintf(buf,64,"\tmovss\t%%%s, %%xmm0\n",rName);
-			     cas_proc_body(NULL,buf);
+                 if(strcmp(rName, "xmm0") != 0){
+			       snprintf(buf,64,"\tmovss\t%%%s, %%xmm0\n",rName);
+			       cas_proc_body(NULL,buf);
+                 }
+                 cas_proc_body(NULL, "\tcvtps2pd\t\%xmm0, \%xmm0\n");
 			     cas_proc_body(NULL,"\tmovl\t$1, \%eax\n");
 			     cas_proc_body(NULL,"\tmovl\t$.flt_wformat, \%edi\n");
 			     cas_proc_body(NULL,"\tcall\tprintf\n");
@@ -784,18 +787,31 @@ mul_expr    : mul_expr TIMES factor
 
 factor	: variable
                         {//Send up variable values to expressions
-                         int reg = reg_get();
-                         char *rName = reg_getName32(reg);
-                         char *rAddrName = reg_getName64($1.val.ival);
-                         char *buf = calloc(64, sizeof(char));
-                         //Output assembly to dereference
-                         snprintf(buf, 64, "\tmovl\t(%%%s), %%%s\n",rAddrName, rName);
-                         cas_proc_body(NULL, buf);
-                         free(buf);
-                         //Release prev address register
-                         reg_release($1.val.ival);
-                         $$.val.ival = reg;
-                         $$.d_type = $1.d_type;
+                         if($1.d_type == INT_T){
+                           int reg = reg_get();
+                           char *rName = reg_getName32(reg);
+                           char *rAddrName = reg_getName64($1.val.ival);
+                           char *buf = calloc(64, sizeof(char));
+                           //Output assembly to dereference
+                           snprintf(buf, 64, "\tmovl\t(%%%s), %%%s\n",rAddrName, rName);
+                           cas_proc_body(NULL, buf);
+                           free(buf);
+                           //Release prev address register
+                           reg_release($1.val.ival);
+                           $$.val.ival = reg;
+                           $$.d_type = $1.d_type;
+                        }else{ //Move FLOAT variable data into register
+                          int reg = reg_getXMM();
+                          char *rName = reg_getNameXMM(reg);
+                          char *rAddrName = reg_getName64($1.val.ival);
+                          char *buf = calloc(64, sizeof(char));
+                          //Output assembly to dereference var addr to register
+                          snprintf(buf, 64, "\tmovss\t(%%%s), %%%s\n", rAddrName, rName);
+                          cas_proc_body(NULL, buf);
+                          reg_release($1.val.ival);
+                          $$.val.ival = reg;
+                          $$.d_type = $1.d_type;
+                        }
                         }
 
 		| constant
@@ -815,7 +831,7 @@ variable	: IDENTIFIER
 			 //Into a register, pass up
 			 symb *var = st_get_symbol($1.name);
 			 if(var == NULL) YYERROR;
-			 //Get register to store variable
+			 //Get int or float register based on type
 			 int reg = reg_get();
 			 char *rName = reg_getName64(reg);
 			 char *buf = calloc(64, sizeof(char));
