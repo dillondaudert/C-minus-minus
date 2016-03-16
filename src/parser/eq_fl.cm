@@ -1,0 +1,19 @@
+int main () {
+    int i;
+    float a;
+    i = 10;
+    a = 5.5;
+    write('10 == 10');
+    write(10 == 10);
+    write(i == i); 
+    write('5.5 == 5.5');
+    write(5.5 == 5.5);
+    write(a == a);
+    write('5.5 == 10');
+    write(5.5 == 10);
+    write(a == i);
+    write('5.0 == 5');
+    write(5.0 == 5);
+    
+    exit;
+}
