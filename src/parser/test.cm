@@ -1,0 +1,18 @@
+int main () {
+    int i;
+    float a;
+    i = 10;
+    a = 5.5;
+    write(5.5 < 10);
+    write(10 < 5.5);
+    
+    write(10 > 5.5);
+    write(5.5 > 10);
+    
+    write(5.5 <= 10);
+    
+    write(10 >= 5.5);
+    
+    write(5.5 <= 5.5);
+    exit;
+}
