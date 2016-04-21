@@ -879,6 +879,7 @@ simple_expr	: simple_expr EQ add_expr
           snprintf(buf, 64, "\tcmovge\t%%%s, %%%s\n", r2Name, r1Name);
           cas_proc_body(NULL, buf);
           reg_release($3.val.ival);
+        
         }else if($1.d_type == INT_T && $3.d_type == FLOAT_T){
           //1. Put integer into xmm register
           //2. ucomiss r2, r1
@@ -886,21 +887,25 @@ simple_expr	: simple_expr EQ add_expr
           //3. cmov r2, r1
           r1Name = reg_getName32($1.val.ival);
           r2Name = reg_getNameXMM($3.val.ival);
+          
           //Need a new XMM register for comparison and normal register for results
           int xmmreg = reg_getXMM();
           int resreg = reg_get();
           char *resName = reg_getName32(resreg);
           char *xmmName = reg_getNameXMM(xmmreg);
+          
           //Move value into XMM, compare to set EFLAGS
           snprintf(buf, 64, "\tcvtsi2ss\t%%%s, %%%s\n", r1Name, xmmName);
           cas_proc_body(NULL, buf);
           snprintf(buf, 64, "\tucomiss\t%%%s, %%%s\n", r2Name, xmmName);
           cas_proc_body(NULL, buf);
+          
           //Flags are now set, conditional move vals
           snprintf(buf, 64, "\tmovl\t$0, %%%s\n", r1Name);
           cas_proc_body(NULL, buf);
           snprintf(buf, 64, "\tmovl\t$1, %%%s\n", resName);
           cas_proc_body(NULL, buf);
+          
           //Do conditional move
           snprintf(buf, 64, "\tcmovge\t%%%s, %%%s\n", resName, r1Name);
           cas_proc_body(NULL, buf);

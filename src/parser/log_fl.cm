@@ -1,0 +1,39 @@
+int main () {
+    int i;
+    float a;
+    i = 15;
+    a = 7.6;
+    write('LESS THAN');
+    write('15 < 7.6');
+    write(i < a);
+    write('7.6 < 15');
+    write(a < i);
+    write('7.6 < 7.6');
+    write(a < a);
+
+    write('GREATER THAN');
+    write('15 > 7.6');
+    write(i > a);
+    write('7.6 > 15');
+    write(a > i);
+    write('7.6 > 7.6');
+    write(a > a);
+
+    write('LESS OR EQUAL');
+    write('15 <= 7.6');
+    write(i <= a);
+    write('7.6 <= 15');
+    write(a <= i);
+    write('7.6 <= 7.6');
+    write(a <= a);
+
+    write('GREATER OR EQUAL');
+    write('15 >= 7.6');
+    write(i >= a);
+    write('7.6 >= 15');
+    write(a >= i);
+    write('7.6 >= 7.6');
+    write (a >= a);
+
+    exit;
+}

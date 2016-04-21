@@ -6,20 +6,22 @@ srcdir = .
 symdir = $(srcdir)/stable
 parsedir = $(srcdir)/parser
 maindir = $(srcdir)/main
-objdir = $(srcdir)/obj
 bindir = $(srcdir)/bin
 includedir = $(srcdir)/include
+assemdir = $(srcdir)/assembly
 
 CC = gcc
 CFLAGS = -O1 -Wall --std=c99 -I$(includedir)
 CLDFLAGS = -O1
 
-all: parser stable
+all: parser stable generator
 
 bindir: 
 	mkdir bin
 
 parser: include $(parsedir)/Makefile
+
+generator: include $(assemdir)/Makefile
 
 stable: 
 	cd $(symdir)

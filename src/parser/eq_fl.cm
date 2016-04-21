@@ -21,6 +21,9 @@ int main () {
     write('10 >= 5.5');
     write(10 >= 5.5);
     write(i >= a);
+    write('5.5 >= 10');
+    write(5.5 >= 10);
+    write(a >= i);
     write('9 < 10');
     write(9 < 10);
     write('9 > 10');
